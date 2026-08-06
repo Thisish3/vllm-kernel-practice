@@ -7,18 +7,12 @@ from test_group_quant import reference_group_quant_int8
 
 torch.manual_seed(0)
 
-# small + deterministic so we can print everything
-x = torch.randn(2, 8, device="cuda", dtype=torch.float16) * 5
-group_size = 4
+# same shape/seed as the failing check_correctness() case
+x = torch.randn(37, 256, device="cuda", dtype=torch.float16) * 5
+group_size = 64
 
 q_triton, s_triton = group_quant_int8_triton(x, group_size)
 q_ref, s_ref = reference_group_quant_int8(x, group_size)
-
-print("x:\n", x)
-print("scale triton:\n", s_triton)
-print("scale ref:\n", s_ref)
-print("q triton:\n", q_triton)
-print("q ref:\n", q_ref)
 
 diff_mask = q_triton != q_ref
 print("\nnum mismatched elements:", diff_mask.sum().item(), "/", q_triton.numel())
