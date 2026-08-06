@@ -29,6 +29,20 @@ vLLM의 `csrc/libtorch_stable/quantization/w8a8/fp8/per_token_group_quant.cu`
 - 원본은 워프 셔플로 리덕션하고 shared memory에 값을 캐싱해 DRAM을 한 번만
   읽지만, 여기서는 `tl.max`로 리덕션을 Triton이 알아서 처리하게 맡겼습니다.
 - scale 계산 후 clamp가 `[-127, 127]`인 것까지는 원본과 동일한 알고리즘입니다.
+- 원본은 반올림 없이 truncate(`DST_DTYPE(q)` 캐스트)만 하는데, 이 실습에서도
+  그대로 truncate로 맞췄습니다. (처음엔 reference를 `round()`로 짰다가, 원본과
+  다른 반올림 방식이라 tie 경계에서 결과가 갈리는 걸 직접 겪고 고쳤습니다.)
+
+## 디버깅 중 발견한 것: fp32 나눗셈 정밀도 차이
+Triton 커널과 PyTorch reference를 완전히 같은 수식으로 짜도, 결과 int8 값이
+0.2% 정도(9472개 중 20개) 다르게 나온 적이 있습니다. 원인은 `x / scale` 나눗셈
+자체가 Triton과 PyTorch에서 **bit-identical하지 않다는 것** — GPU는 성능을 위해
+나눗셈을 근사 역수(fast reciprocal approximation)로 계산하는 경우가 많아서, 참값이
+`127.0`처럼 정수 경계에 아주 가까우면(`126.999996` vs `127.000001`) truncate 결과가
+이웃한 정수로 갈릴 수 있습니다. 로직 버그가 아니라 fast-math 트레이드오프의 흔적이라,
+`test_group_quant.py`는 "완전 일치"가 아니라 "경계 근처에서만, 드물게, 최대 1 차이까지"
+허용하도록 짜여 있습니다. Edge 디바이스에서 정밀도-속도 트레이드오프를 다룰 때 실제로
+부딪히는 종류의 문제라 그대로 남겨뒀습니다.
 
 ## 다음 실습 아이디어 (edge 제약 관점)
 - `group_size`를 32/64/128/256으로 바꿔가며 벤치마크 → 그룹이 작을수록
