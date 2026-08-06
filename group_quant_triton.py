@@ -39,11 +39,10 @@ def _group_quant_int8_kernel(
     scale = absmax / 127.0
     scale = tl.where(scale == 0.0, 1.0, scale)  # avoid div-by-zero on all-zero groups
 
-    q = x / scale
-    # round-half-away-from-zero, done manually so this doesn't depend on
-    # which libdevice/tl.math API a given Triton version exposes
-    q = tl.where(q >= 0, tl.floor(q + 0.5), tl.ceil(q - 0.5))
-    q = tl.minimum(tl.maximum(q, -127.0), 127.0)
+    # vLLM's reference kernel does a plain truncating cast here (no
+    # rounding) - `dst = DST_DTYPE(q)` in per_token_group_quant.cu - so we
+    # match that instead of rounding to nearest.
+    q = tl.minimum(tl.maximum(x / scale, -127.0), 127.0)
 
     tl.store(out_q_ptr + row_start + offs, q.to(tl.int8))
     tl.store(out_s_ptr + token_id * num_groups + group_id, scale)

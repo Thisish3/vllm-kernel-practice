@@ -20,7 +20,8 @@ def reference_group_quant_int8(x: torch.Tensor, group_size: int):
     absmax = xg.abs().amax(dim=-1)
     scale = (absmax / 127.0).clamp_min(1e-12)
 
-    q = (xg / scale.unsqueeze(-1)).round().clamp(-127, 127).to(torch.int8)
+    # truncating cast (no rounding), matching vLLM's `DST_DTYPE(q)` cast
+    q = (xg / scale.unsqueeze(-1)).clamp(-127, 127).to(torch.int8)
     return q.reshape(num_tokens, hidden_size), scale
 
 
