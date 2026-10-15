@@ -58,6 +58,21 @@ def check_correctness():
     )
 
 
+def check_multi_matches_single():
+    """The multi-group-per-program kernel does the same math per group, so it
+    must be bit-identical to the one-group kernel, including a ragged last
+    program (total_groups not divisible by groups_per_program)."""
+    from group_quant_triton_multi import group_quant_int8_triton_multi
+
+    torch.manual_seed(0)
+    x = torch.randn(37, 256, device="cuda", dtype=torch.float16) * 5
+    q1, s1 = group_quant_int8_triton(x, 64)
+    for groups in (2, 8, 16):  # 148 groups: 8 and 16 leave a partial last program
+        qm, sm = group_quant_int8_triton_multi(x, 64, groups)
+        assert torch.equal(qm, q1) and torch.equal(sm, s1), f"groups={groups}"
+    print("multi-group kernel OK: bit-identical to the one-group kernel")
+
+
 def benchmark():
     import triton
 
@@ -77,4 +92,5 @@ def benchmark():
 
 if __name__ == "__main__":
     check_correctness()
+    check_multi_matches_single()
     benchmark()

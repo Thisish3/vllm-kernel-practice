@@ -1,0 +1,217 @@
+{
+  "gpu": "NVIDIA GeForce RTX 3060 Ti",
+  "torch": "2.9.0+cu129",
+  "triton": "3.5.0",
+  "vllm": "0.11.2",
+  "hidden": 4096,
+  "group_size": 128,
+  "speed": [
+    {
+      "tokens": 16,
+      "min_bytes": 198656,
+      "impls": {
+        "pytorch_ref": {
+          "us": 44.48,
+          "gbps": 4.5
+        },
+        "triton_1group": {
+          "us": 5.17,
+          "gbps": 38.4
+        },
+        "triton_2groups": {
+          "us": 4.63,
+          "gbps": 43.0
+        },
+        "triton_4groups": {
+          "us": 5.47,
+          "gbps": 36.3
+        },
+        "triton_8groups": {
+          "us": 9.39,
+          "gbps": 21.2
+        },
+        "triton_16groups": {
+          "us": 6.98,
+          "gbps": 28.5
+        },
+        "vllm_cuda": {
+          "us": 8.85,
+          "gbps": 22.4
+        }
+      }
+    },
+    {
+      "tokens": 256,
+      "min_bytes": 3178496,
+      "impls": {
+        "pytorch_ref": {
+          "us": 156.01,
+          "gbps": 20.4
+        },
+        "triton_1group": {
+          "us": 28.98,
+          "gbps": 109.7
+        },
+        "triton_2groups": {
+          "us": 14.05,
+          "gbps": 226.2
+        },
+        "triton_4groups": {
+          "us": 13.41,
+          "gbps": 237.0
+        },
+        "triton_8groups": {
+          "us": 15.86,
+          "gbps": 200.4
+        },
+        "triton_16groups": {
+          "us": 12.88,
+          "gbps": 246.8
+        },
+        "vllm_cuda": {
+          "us": 11.87,
+          "gbps": 267.7
+        }
+      }
+    },
+    {
+      "tokens": 4096,
+      "min_bytes": 50855936,
+      "impls": {
+        "pytorch_ref": {
+          "us": 1914.2,
+          "gbps": 26.6
+        },
+        "triton_1group": {
+          "us": 319.53,
+          "gbps": 159.2
+        },
+        "triton_2groups": {
+          "us": 177.07,
+          "gbps": 287.2
+        },
+        "triton_4groups": {
+          "us": 148.74,
+          "gbps": 341.9
+        },
+        "triton_8groups": {
+          "us": 140.73,
+          "gbps": 361.4
+        },
+        "triton_16groups": {
+          "us": 146.54,
+          "gbps": 347.0
+        },
+        "vllm_cuda": {
+          "us": 155.71,
+          "gbps": 326.6
+        }
+      }
+    }
+  ],
+  "kernel_launches": {
+    "pytorch_ref": 8,
+    "triton_1group": 1,
+    "triton_2groups": 1,
+    "triton_4groups": 1,
+    "triton_8groups": 1,
+    "triton_16groups": 1,
+    "vllm_cuda": 1
+  },
+  "accuracy_vs_pytorch_ref": {
+    "triton_1group": {
+      "q_mismatch": 21690,
+      "q_max_diff": 1,
+      "numel": 16777216,
+      "scale_max_rel_diff": 0.0
+    },
+    "triton_2groups": {
+      "q_mismatch": 21690,
+      "q_max_diff": 1,
+      "numel": 16777216,
+      "scale_max_rel_diff": 0.0
+    },
+    "triton_4groups": {
+      "q_mismatch": 21690,
+      "q_max_diff": 1,
+      "numel": 16777216,
+      "scale_max_rel_diff": 0.0
+    },
+    "triton_8groups": {
+      "q_mismatch": 21690,
+      "q_max_diff": 1,
+      "numel": 16777216,
+      "scale_max_rel_diff": 0.0
+    },
+    "triton_16groups": {
+      "q_mismatch": 21690,
+      "q_max_diff": 1,
+      "numel": 16777216,
+      "scale_max_rel_diff": 0.0
+    },
+    "vllm_cuda": {
+      "q_mismatch": 5950,
+      "q_max_diff": 1,
+      "numel": 16777216,
+      "scale_max_rel_diff": 1.1909207842109026e-07
+    }
+  },
+  "group_size_sweep": [
+    {
+      "group_size": 32,
+      "mean_abs_err": 0.04511,
+      "mean_rel_err_pct": 4.303,
+      "scale_kb": 2048.0,
+      "scale_overhead_pct_of_int8": 12.5
+    },
+    {
+      "group_size": 64,
+      "mean_abs_err": 0.05039,
+      "mean_rel_err_pct": 4.697,
+      "scale_kb": 1024.0,
+      "scale_overhead_pct_of_int8": 6.25
+    },
+    {
+      "group_size": 128,
+      "mean_abs_err": 0.05514,
+      "mean_rel_err_pct": 5.048,
+      "scale_kb": 512.0,
+      "scale_overhead_pct_of_int8": 3.125
+    },
+    {
+      "group_size": 256,
+      "mean_abs_err": 0.05948,
+      "mean_rel_err_pct": 5.364,
+      "scale_kb": 256.0,
+      "scale_overhead_pct_of_int8": 1.562
+    },
+    {
+      "group_size": 512,
+      "mean_abs_err": 0.06352,
+      "mean_rel_err_pct": 5.659,
+      "scale_kb": 128.0,
+      "scale_overhead_pct_of_int8": 0.781
+    },
+    {
+      "group_size": 1024,
+      "mean_abs_err": 0.06728,
+      "mean_rel_err_pct": 5.931,
+      "scale_kb": 64.0,
+      "scale_overhead_pct_of_int8": 0.391
+    },
+    {
+      "group_size": 2048,
+      "mean_abs_err": 0.07082,
+      "mean_rel_err_pct": 6.187,
+      "scale_kb": 32.0,
+      "scale_overhead_pct_of_int8": 0.195
+    },
+    {
+      "group_size": 4096,
+      "mean_abs_err": 0.07423,
+      "mean_rel_err_pct": 6.432,
+      "scale_kb": 16.0,
+      "scale_overhead_pct_of_int8": 0.098
+    }
+  ]
+}
