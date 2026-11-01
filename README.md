@@ -111,7 +111,10 @@ torch, Triton, vLLM `_C` 확장이 모두 들어 있는 `vllm/vllm-openai:v0.11.
    그룹 8개 버전이 오히려 느린 것(9.4µs)도 이 수준의 편차로 봅니다. 디코드처럼 토큰이 적을 때는 커널 하나를 빠르게 하는 것보다
    커널 수를 줄이는 것(PyTorch 8개 → 1개, 44.5 → 5.2µs)이 효과가 컸습니다.
 4. **최적값은 크기마다 다릅니다.** 4096토큰은 그룹 8개, 256토큰은 16개, 16토큰은 2개가 가장 빨랐습니다.
-   vLLM이 shape에 따라 `groups_per_block`을 고르는 이유를 직접 확인한 셈입니다.
+   반면 vLLM의 `GetGroupsPerBlock`은 성능을 보고 고르지 않고, 전체 그룹 수가 16·8·4·2로 나누어떨어지는지만 봅니다
+   ([per_token_group_quant.cu#L166-L180](https://github.com/vllm-project/vllm/blob/811622c410c2f1baf2fa7056ca19753264b95815/csrc/libtorch_stable/quantization/w8a8/fp8/per_token_group_quant.cu#L166-L180)).
+   그래서 이 크기들에서는 항상 16을 씁니다. 크기마다 최적값이 다른 건 우리 Triton 커널에서 잰 결과이고,
+   스레드 구성이 다른 vLLM CUDA 커널에서도 그런지는 재지 않았습니다.
 
 참고로 같은 GPU에서 1GiB 복사로 잰 대역폭은 349GB/s였는데, 그룹 8개 버전은 361GB/s가 나왔습니다.
 복사는 읽기와 쓰기가 1:1이지만 이 연산은 약 2:1이라, 복사 측정치가 이 연산의 상한은 아닙니다.
@@ -152,9 +155,12 @@ pie showData title GPU 시간 분포 (TinyLlama-1.1B 디코딩 1스텝)
 
 **핵심 발견**: attention 커널은 GPU 시간의 2.4%뿐이고, 압도적 1위는 GEMV(86.8%)
 입니다. 디코딩은 배치=1이라 가중치 원소 하나당 곱셈을 한 번만 해서
-memory-bandwidth-bound가 되기 때문입니다 — 이게 바로 이 저장소의 group
-quantization 커널이 실제로 푸는 문제입니다 (가중치를 int8로 줄여 HBM에서
-읽어야 할 바이트 수 자체를 줄임). Colab/Jupyter 환경에서 vLLM을 직접 띄우며
+memory-bandwidth-bound가 되기 때문입니다. 이 경우 직접 듣는 해법은 가중치를
+양자화해 HBM에서 읽는 바이트 수를 줄이는 것(weight-only int8/int4)입니다.
+참고로 이 저장소의 group quantization 커널은 가중치가 아니라 **활성값**을 실행 중에
+토큰별 그룹으로 양자화하는 커널입니다(vLLM에서는 W8A8 블록 양자화 GEMM 직전에
+입력 `A`에 적용, 예: [fused_moe/utils.py#L192](https://github.com/vllm-project/vllm/blob/811622c410c2f1baf2fa7056ca19753264b95815/vllm/model_executor/layers/fused_moe/utils.py#L192)).
+그래서 가중치 읽기를 줄이지는 않고, 이 커널 자체의 성능도 같은 이유로 메모리 대역폭이 정합니다. Colab/Jupyter 환경에서 vLLM을 직접 띄우며
 겪은 `libcudart.so` 경로, fork+CUDA 크래시, `pynvml` 초기화 실패 같은 실전
 이슈들도 커밋 로그에 그대로 남아있습니다.
 
