@@ -35,12 +35,11 @@ def check_correctness():
 
     torch.testing.assert_close(s_triton, s_ref, rtol=1e-4, atol=1e-6)
 
-    # Triton's `/` and PyTorch's `/` aren't guaranteed bit-identical (GPUs
-    # commonly use a fast approximate reciprocal for division). When the
-    # true quotient lands within ~1 ULP of an integer (e.g. raw ~= 127.0),
-    # that tiny discrepancy can truncate to a different neighboring
-    # integer. That's a precision artifact of fast division, not a logic
-    # bug, so we allow it as long as it's rare and off by at most 1.
+    # Triton's `/` and PyTorch's `/` are not bit-identical here: on the
+    # group-max element PyTorch gives exactly 127.0 while the Triton kernel
+    # truncates to 126 (checked on a T4). It is a last-bit division
+    # difference, not a logic bug, so allow it while it stays rare and
+    # off by at most 1.
     diff = (q_triton.int() - q_ref.int()).abs()
     num_mismatched = (diff != 0).sum().item()
     mismatch_ratio = num_mismatched / q_triton.numel()

@@ -1,0 +1,59 @@
+{
+ "gpu": "Tesla T4",
+ "torch": "2.11.0+cu130",
+ "triton": "3.6.0",
+ "hidden": 4096,
+ "group_size": 128,
+ "unit": "us, median of 5 do_bench medians",
+ "copy_512MiB_GBps": 231.0,
+ "note": "multiN uses default num_warps=4; tri1_wK is the one-group kernel with num_warps=K",
+ "speed": [
+  {
+   "tokens": 16,
+   "pytorch_ref": 27.3,
+   "tri1_w1": 7.8,
+   "tri1_w2": 5.6,
+   "tri1_w4": 6.1,
+   "multi1": 6.1,
+   "multi2": 5.4,
+   "multi4": 5.3,
+   "multi8": 5.3,
+   "multi16": 5.1
+  },
+  {
+   "tokens": 256,
+   "pytorch_ref": 188.5,
+   "tri1_w1": 18.9,
+   "tri1_w2": 20.3,
+   "tri1_w4": 32.5,
+   "multi1": 29.7,
+   "multi2": 19.3,
+   "multi4": 17.4,
+   "multi8": 17.7,
+   "multi16": 17.4
+  },
+  {
+   "tokens": 4096,
+   "pytorch_ref": 2811.9,
+   "tri1_w1": 229.2,
+   "tri1_w2": 254.0,
+   "tri1_w4": 485.0,
+   "multi1": 422.2,
+   "multi2": 236.4,
+   "multi4": 205.8,
+   "multi8": 202.8,
+   "multi16": 214.2
+  }
+ ],
+ "accuracy_4096x4096": {
+  "mismatches_vs_pytorch": 21743,
+  "elements": 16777216,
+  "max_diff": 1,
+  "scale_equal": true,
+  "multi8_bitwise_equal_single": true
+ },
+ "kernel_launches": {
+  "pytorch_ref": 8,
+  "triton": 1
+ }
+}
