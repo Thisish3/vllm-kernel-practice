@@ -35,11 +35,11 @@ def check_correctness():
 
     torch.testing.assert_close(s_triton, s_ref, rtol=1e-4, atol=1e-6)
 
-    # Triton's `/` and PyTorch's `/` are not bit-identical here: on the
-    # group-max element PyTorch gives exactly 127.0 while the Triton kernel
-    # truncates to 126 (checked on a T4). It is a last-bit division
-    # difference, not a logic bug, so allow it while it stays rare and
-    # off by at most 1.
+    # Triton compiles `x / scale` to div.full.f32 (not IEEE, <= 2 ulp), so
+    # on group-max elements x/scale can land just below or at 127 differently
+    # from PyTorch and truncate to 126 vs 127 in either direction. With
+    # tl.math.div_rn the two match bit for bit (checked on an RTX 3060 Ti).
+    # Not a logic bug, so allow it while it stays rare and off by at most 1.
     diff = (q_triton.int() - q_ref.int()).abs()
     num_mismatched = (diff != 0).sum().item()
     mismatch_ratio = num_mismatched / q_triton.numel()
