@@ -311,13 +311,13 @@ pie showData title GPU 시간 분포 (TinyLlama-1.1B 디코딩 1스텝)
 ```
 
 **핵심 발견**: attention 커널은 GPU 시간의 2.4%뿐이고, 압도적 1위는 GEMV(86.8%)
-입니다. 디코딩은 배치=1이라 가중치 원소 하나당 곱셈을 한 번만 해서
-memory-bandwidth-bound가 되기 때문입니다. 이 경우 직접 듣는 해법은 가중치를
-양자화해 HBM에서 읽는 바이트 수를 줄이는 것(weight-only int8/int4)입니다.
+입니다. 배치=1 GEMV는 가중치 원소 하나당 곱셈-덧셈이 한 번이라 바이트당 연산이 적습니다(계산).
+디코드 한 스텝이 메모리 대역폭을 실제로 몇 % 쓰는지는 [vllm-serving-tuning-practice 실험 5](https://github.com/Thisish3/vllm-serving-tuning-practice#실험-5--디코드-한-스텝은-메모리-대역폭을-얼마나-쓰는가-rtx-3060-ti)에서 쟀습니다.
+weight-only 양자화로 이 시간이 얼마나 줄어드는지는 재지 않았습니다.
 참고로 이 저장소의 group quantization 커널은 가중치가 아니라 **활성값**을 실행 중에
 토큰별 그룹으로 양자화하는 커널입니다(vLLM에서는 W8A8 블록 양자화 GEMM 직전에
 입력 `A`에 적용, 예: [fused_moe/utils.py#L192](https://github.com/vllm-project/vllm/blob/811622c410c2f1baf2fa7056ca19753264b95815/vllm/model_executor/layers/fused_moe/utils.py#L192)).
-그래서 가중치 읽기를 줄이지는 않고, 이 커널 자체의 성능도 같은 이유로 메모리 대역폭이 정합니다. Colab/Jupyter 환경에서 vLLM을 직접 띄우며
+그래서 가중치 읽기를 줄이지는 않습니다. 이 커널의 그룹 8개 버전은 3060 Ti ncu에서 DRAM 처리량 94.8%였습니다(위 "원인 확인 B"). Colab/Jupyter 환경에서 vLLM을 직접 띄우며
 겪은 `libcudart.so` 경로, fork+CUDA 크래시, `pynvml` 초기화 실패 같은 실전
 이슈들도 커밋 로그에 그대로 남아있습니다.
 
