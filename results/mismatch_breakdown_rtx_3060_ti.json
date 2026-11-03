@@ -1,0 +1,12 @@
+{
+ "gpu": "NVIDIA GeForce RTX 3060 Ti",
+ "q_from_triton_quotient_equals_kernel_q": true,
+ "mismatches": 21654,
+ "categories": {
+  "torch|x/s|=127.0 triton|x/s|=126.99999237060547 |q_ref|=127 |q_triton|=126": 18039,
+  "torch|x/s|=126.99999237060547 triton|x/s|=127.0 |q_ref|=126 |q_triton|=127": 3615
+ },
+ "elements_quotient_differs": 5296989,
+ "elements_quotient_differs_and_one_is_integer": 62240,
+ "max_abs_quotient_diff": 1.52587890625e-05
+}

@@ -1,0 +1,80 @@
+=== kernel: void at::native::elementwise_kernel<(int)128, (int)2, void at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<float, float, float, at::native::binary_internal::DivFunctor<float>>>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)
+ 267  BSSY B1, 0x500e9afa0
+ 268  IMAD.X R7, RZ, RZ, c[0x0][0x3cc], P1
+ 269  MUFU.RCP R3, R9
+ 270  FCHK P0, R0, R9
+ 271  FFMA R4, -R9, R3, 1
+ 272  FFMA R3, R3, R4, R3
+ 273  FFMA R4, R0, R3, RZ
+ 274  FFMA R2, -R9, R4, R0
+ 275  FFMA R3, R3, R2, R4
+ 276  @!P0  BRA 0x500e9af90
+ 277  MOV R3, R9
+  ...
+ 278  MOV R2, 0x1180
+  ...
+ 544  LDG.E R0, [R8.64]
+ 545  BSSY B0, 0x500e9c110
+ 546  MUFU.RCP R3, R7
+ 547  FCHK P0, R0, R7
+ 548  FFMA R4, -R7, R3, 1
+ 549  FFMA R3, R3, R4, R3
+ 550  IADD3 R4, P1, R2, c[0x0][0x3c8], RZ
+ 551  FFMA R10, R0, R3, RZ
+ 552  IADD3.X R5, RZ, c[0x0][0x3cc], RZ, P1, !PT
+ 553  FFMA R2, -R7, R10, R0
+ 554  FFMA R3, R3, R2, R10
+  ...
+ 555  @!P0  BRA 0x500e9c100
+  ...
+ 599  IADD3 R10, -R10, R3, RZ
+ 600  IADD3 R3, R12, -0x7f, RZ
+ 601  MUFU.RCP R9, R10
+ 602  FADD.FTZ R11, -R10, -RZ
+ 603  IMAD R0, R3, -0x800000, R0
+ 604  IADD3 R3, R3, 0x7f, -R14
+ 605  IADD3 R3, R3, R8, RZ
+ 606  FFMA R12, R9, R11, 1
+ 607  FFMA R16, R9, R12, R9
+ 608  FFMA R9, R0, R16, RZ
+ 609  FFMA R12, R11, R9, R0
+  ...
+ 657  LOP3.LUT R9, R3, 0x80000000, R0, 0x48, !PT
+ 658  BRA 0x500e9c760
+ 659  MUFU.RSQ R9, -QNAN
+ 660  BRA 0x500e9c760
+ 661  FADD.FTZ R9, R0, R3
+ 662  BSYNC B2
+ 663  MOV R3, 0x0
+ 664  RET.REL.NODEC R2, 0x500e99e00
+ 665  BRA `(.L_x_0) 0x500e9c790
+ 666  NOP
+ 667  NOP
+  ...
+total SASS lines: 680  MUFU.RCP: 3  FCHK: 2  CALL: 2
+=== kernel: _group_quant_int8_kernel
+  10  I2F.RP R5, R9
+  11  IABS R8, R7
+  12  MUFU.RCP R5, R5
+  13  IADD3 R2, R5, 0xffffffe, RZ
+  14  IMAD.MOV R5, RZ, RZ, -R10
+  15  F2I.FTZ.U32.TRUNC.NTZ R3, R2
+  16  IMAD.MOV.U32 R2, RZ, RZ, RZ
+  17  IMAD.MOV R6, RZ, RZ, -R3
+  18  IMAD R11, R6, R9, RZ
+  19  IMAD.MOV.U32 R6, RZ, RZ, R8
+  20  IMAD.HI.U32 R3, R3, R11, R2
+  ...
+  79  @!P2  FMUL R4, R4, 16777216
+  80  @P1   FMUL R5, R5, 0.25
+  81  MUFU.RCP R4, R4
+  82  @!P2  FMUL R5, R5, 16777216
+  83  IADD3 R6, P1, P2, R6, c[0x0][0x168], R3
+  84  LEA.HI.X.SX32 R3, R2, c[0x0][0x174], 0x2, P3
+  85  LEA R2, P3, R0, R7, 0x2
+  86  IADD3.X R7, RZ, c[0x0][0x16c], R8, P1, P2
+  87  LEA.HI.X R3, R0, R3, RZ, 0x2, P3
+  88  FMUL R5, R4, R5
+  89  FMNMX R5, R5, -127, !PT
+  ...
+total SASS lines: 112  MUFU.RCP: 2  FCHK: 0  CALL: 0

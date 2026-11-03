@@ -1,0 +1,510 @@
+{
+ "gpu": "NVIDIA GeForce RTX 3060 Ti",
+ "torch": "2.9.0+cu128",
+ "torch_cuda": "12.8",
+ "triton": "3.5.0",
+ "hidden": 4096,
+ "group_size": 128,
+ "unit": "us; median_us = median of runs_us, each run is one triton.testing.do_bench(return_mode='median')",
+ "note": "multiN uses default num_warps=4; tri1_wK is the one-group kernel with num_warps=K",
+ "copy_512MiB_GBps": {
+  "median": 414.3,
+  "runs": [
+   413.8,
+   414.3,
+   414.3,
+   414.5,
+   413.8
+  ]
+ },
+ "speed": [
+  {
+   "tokens": 16,
+   "pytorch_ref": {
+    "median_us": 31.74,
+    "runs_us": [
+     31.74,
+     32.16,
+     33.79,
+     31.74,
+     31.74
+    ]
+   },
+   "tri1_w1": {
+    "median_us": 4.19,
+    "runs_us": [
+     4.32,
+     4.1,
+     4.26,
+     4.18,
+     4.19
+    ]
+   },
+   "tri1_w2": {
+    "median_us": 4.32,
+    "runs_us": [
+     4.51,
+     4.32,
+     4.93,
+     4.29,
+     4.1
+    ]
+   },
+   "tri1_w4": {
+    "median_us": 5.12,
+    "runs_us": [
+     5.12,
+     5.12,
+     5.12,
+     5.12,
+     5.12
+    ]
+   },
+   "multi1": {
+    "median_us": 5.12,
+    "runs_us": [
+     5.12,
+     5.12,
+     5.09,
+     5.12,
+     5.12
+    ]
+   },
+   "multi2": {
+    "median_us": 4.14,
+    "runs_us": [
+     4.45,
+     4.19,
+     4.14,
+     4.1,
+     4.1
+    ]
+   },
+   "multi4": {
+    "median_us": 4.1,
+    "runs_us": [
+     4.1,
+     4.1,
+     4.1,
+     4.1,
+     4.1
+    ]
+   },
+   "multi8": {
+    "median_us": 4.1,
+    "runs_us": [
+     4.1,
+     4.1,
+     4.1,
+     4.1,
+     4.1
+    ]
+   },
+   "multi16": {
+    "median_us": 4.1,
+    "runs_us": [
+     4.24,
+     4.1,
+     4.1,
+     4.1,
+     4.21
+    ]
+   }
+  },
+  {
+   "tokens": 256,
+   "pytorch_ref": {
+    "median_us": 128.67,
+    "runs_us": [
+     128.0,
+     129.02,
+     129.02,
+     128.67,
+     125.95
+    ]
+   },
+   "tri1_w1": {
+    "median_us": 14.34,
+    "runs_us": [
+     14.34,
+     14.34,
+     14.34,
+     14.34,
+     14.34
+    ]
+   },
+   "tri1_w2": {
+    "median_us": 15.36,
+    "runs_us": [
+     15.36,
+     15.36,
+     15.52,
+     15.36,
+     15.36
+    ]
+   },
+   "tri1_w4": {
+    "median_us": 20.48,
+    "runs_us": [
+     20.48,
+     20.54,
+     20.48,
+     20.48,
+     20.48
+    ]
+   },
+   "multi1": {
+    "median_us": 19.22,
+    "runs_us": [
+     19.07,
+     19.46,
+     18.94,
+     19.39,
+     19.22
+    ]
+   },
+   "multi2": {
+    "median_us": 13.31,
+    "runs_us": [
+     13.31,
+     13.31,
+     12.94,
+     13.31,
+     13.28
+    ]
+   },
+   "multi4": {
+    "median_us": 11.3,
+    "runs_us": [
+     11.46,
+     11.58,
+     11.3,
+     11.26,
+     11.26
+    ]
+   },
+   "multi8": {
+    "median_us": 11.94,
+    "runs_us": [
+     11.94,
+     11.71,
+     11.5,
+     12.19,
+     12.05
+    ]
+   },
+   "multi16": {
+    "median_us": 11.26,
+    "runs_us": [
+     11.26,
+     11.46,
+     11.26,
+     11.26,
+     11.26
+    ]
+   }
+  },
+  {
+   "tokens": 4096,
+   "pytorch_ref": {
+    "median_us": 1632.26,
+    "runs_us": [
+     1635.33,
+     1634.82,
+     1632.26,
+     1632.26,
+     1632.26
+    ]
+   },
+   "tri1_w1": {
+    "median_us": 170.8,
+    "runs_us": [
+     170.74,
+     170.82,
+     170.8,
+     171.01,
+     170.75
+    ]
+   },
+   "tri1_w2": {
+    "median_us": 187.39,
+    "runs_us": [
+     187.39,
+     187.39,
+     187.39,
+     187.39,
+     187.39
+    ]
+   },
+   "tri1_w4": {
+    "median_us": 266.24,
+    "runs_us": [
+     266.24,
+     266.24,
+     266.24,
+     266.24,
+     266.24
+    ]
+   },
+   "multi1": {
+    "median_us": 241.66,
+    "runs_us": [
+     241.66,
+     241.66,
+     241.66,
+     241.66,
+     241.66
+    ]
+   },
+   "multi2": {
+    "median_us": 144.22,
+    "runs_us": [
+     143.71,
+     144.16,
+     144.38,
+     144.38,
+     144.22
+    ]
+   },
+   "multi4": {
+    "median_us": 125.95,
+    "runs_us": [
+     125.95,
+     125.95,
+     125.95,
+     125.95,
+     125.95
+    ]
+   },
+   "multi8": {
+    "median_us": 125.95,
+    "runs_us": [
+     125.95,
+     125.95,
+     125.95,
+     125.95,
+     125.95
+    ]
+   },
+   "multi16": {
+    "median_us": 125.95,
+    "runs_us": [
+     125.95,
+     125.86,
+     125.95,
+     125.95,
+     125.95
+    ]
+   },
+   "gbps_from_median": {
+    "pytorch_ref": 31.2,
+    "tri1_w1": 297.8,
+    "tri1_w2": 271.4,
+    "tri1_w4": 191.0,
+    "multi1": 210.4,
+    "multi2": 352.6,
+    "multi4": 403.8,
+    "multi8": 403.8,
+    "multi16": 403.8
+   },
+   "bench_local_method": {
+    "pytorch_ref": {
+     "median_us": 1653.36,
+     "runs_us": [
+      1653.36,
+      1677.06,
+      1635.43,
+      1635.44,
+      1672.66
+     ]
+    },
+    "triton_1group(=tri1_w4)": {
+     "median_us": 271.36,
+     "runs_us": [
+      271.36,
+      271.49,
+      271.18,
+      273.03,
+      269.16
+     ]
+    },
+    "triton_8groups(=multi8)": {
+     "median_us": 127.19,
+     "runs_us": [
+      127.19,
+      127.3,
+      126.71,
+      126.94,
+      127.79
+     ]
+    }
+   }
+  }
+ ],
+ "accuracy_4096x4096": {
+  "mismatches_vs_pytorch": 21654,
+  "elements": 16777216,
+  "max_diff": 1,
+  "scale_equal": true,
+  "multi8_bitwise_equal_single": true,
+  "mismatch_all_torch_quotient_abs_eq_127": false,
+  "mismatch_all_triton_abs_eq_126": false,
+  "mismatch_all_ref_abs_eq_127": false,
+  "mismatch_all_group_absmax_element": true,
+  "elements_with_torch_quotient_abs_eq_127": 104689,
+  "first5": [
+   {
+    "i": 0,
+    "j": 82,
+    "x": -15.640625,
+    "scale": 0.12315452843904495,
+    "x_over_scale_torch": "-127.000000",
+    "x_over_scale_triton": "-126.999992",
+    "x_over_scale_triton_hex": "-0x1.fbfffe0000000p+6",
+    "q_triton": -126,
+    "q_ref": -127
+   },
+   {
+    "i": 0,
+    "j": 521,
+    "x": 14.2890625,
+    "scale": 0.11251230537891388,
+    "x_over_scale_torch": "127.000000",
+    "x_over_scale_triton": "126.999992",
+    "x_over_scale_triton_hex": "0x1.fbfffe0000000p+6",
+    "q_triton": 126,
+    "q_ref": 127
+   },
+   {
+    "i": 0,
+    "j": 1577,
+    "x": 15.53125,
+    "scale": 0.12229330837726593,
+    "x_over_scale_torch": "127.000000",
+    "x_over_scale_triton": "126.999992",
+    "x_over_scale_triton_hex": "0x1.fbfffe0000000p+6",
+    "q_triton": 126,
+    "q_ref": 127
+   },
+   {
+    "i": 0,
+    "j": 1903,
+    "x": -15.3046875,
+    "scale": 0.12050934880971909,
+    "x_over_scale_torch": "-127.000000",
+    "x_over_scale_triton": "-126.999992",
+    "x_over_scale_triton_hex": "-0x1.fbfffe0000000p+6",
+    "q_triton": -126,
+    "q_ref": -127
+   },
+   {
+    "i": 0,
+    "j": 2383,
+    "x": 15.21875,
+    "scale": 0.11983267962932587,
+    "x_over_scale_torch": "127.000000",
+    "x_over_scale_triton": "126.999992",
+    "x_over_scale_triton_hex": "0x1.fbfffe0000000p+6",
+    "q_triton": 126,
+    "q_ref": 127
+   }
+  ],
+  "triton_quotient_at_mismatch_unique": [
+   126.99999237060547,
+   127.0
+  ],
+  "triton_quotient_bitwise_equal_torch_all": false,
+  "triton_quotient_differs_from_torch_count": 5296989,
+  "triton_div_rn_quotient_bitwise_equal_torch_all": true,
+  "triton_div_rn_differs_from_torch_count": 0
+ },
+ "kernel_launches": {
+  "pytorch_ref": {
+   "count": 8,
+   "kernels": [
+    "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#7}::operator()() const::{lambda(float)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#7}::operator()() const::{lambda(float)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)",
+    "void at::native::vectorized_elementwise_kernel<4, at::native::AbsFunctor<float>, std::array<char*, 2ul> >(int, at::native::AbsFunctor<float>, std::array<char*, 2ul>)",
+    "void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::func_wrapper_t<float, at::native::MaxNanFunctor<float> >, unsigned int, float, 4, 4> >(at::native::ReduceOp<float, at::native::func_wrapper_t<float, at::native::MaxNanFunctor<float> >, unsigned int, float, 4, 4>)",
+    "void at::native::vectorized_elementwise_kernel<4, at::native::BUnaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> >, std::array<char*, 2ul> >(int, at::native::BUnaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float> >, std::array<char*, 2ul>)",
+    "void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::launch_clamp_scalar(at::TensorIteratorBase&, c10::Scalar, c10::Scalar, at::native::detail::ClampLimits)::{lambda()#1}::operator()() const::{lambda()#7}::operator()() const::{lambda(float)#1}, std::array<char*, 2ul> >(int, at::native::(anonymous namespace)::launch_clamp_scalar(at::TensorIteratorBase&, c10::Scalar, c10::Scalar, at::native::detail::ClampLimits)::{lambda()#1}::operator()() const::{lambda()#7}::operator()() const::{lambda(float)#1}, std::array<char*, 2ul>)",
+    "void at::native::elementwise_kernel<128, 2, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<float, float, float, at::native::binary_internal::DivFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<float, float, float, at::native::binary_internal::DivFunctor<float> > const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<float, float, float, at::native::binary_internal::DivFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<float, float, float, at::native::binary_internal::DivFunctor<float> > const&)::{lambda(int)#1})",
+    "void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::launch_clamp_scalar(at::TensorIteratorBase&, c10::Scalar, c10::Scalar, at::native::detail::ClampLimits)::{lambda()#1}::operator()() const::{lambda()#7}::operator()() const::{lambda(float)#1}, std::array<char*, 2ul> >(int, at::native::(anonymous namespace)::launch_clamp_scalar(at::TensorIteratorBase&, c10::Scalar, c10::Scalar, at::native::detail::ClampLimits)::{lambda()#1}::operator()() const::{lambda()#7}::operator()() const::{lambda(float)#1}, std::array<char*, 2ul>)",
+    "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#2}::operator()() const::{lambda(signed char)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#2}::operator()() const::{lambda(signed char)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)"
+   ]
+  },
+  "triton_1group": {
+   "count": 1,
+   "kernels": [
+    "_group_quant_int8_kernel"
+   ]
+  },
+  "triton_multi8": {
+   "count": 1,
+   "kernels": [
+    "_group_quant_int8_multi_kernel"
+   ]
+  }
+ },
+ "ptx": {
+  "tri1_w1": {
+   "file": "results/ptx/group_quant_int8_kernel_w1.ptx",
+   "div_lines": [
+    "div.s32 \t%r12, %r5, %r10;",
+    "div.full.f32 \t%r42, %r40, %r41;",
+    "div.full.f32 \t%r43, %r20, %r4;",
+    "div.full.f32 \t%r44, %r21, %r4;",
+    "div.full.f32 \t%r45, %r22, %r4;",
+    "div.full.f32 \t%r46, %r23, %r4;"
+   ],
+   "n_regs": 18,
+   "n_spills": 0
+  },
+  "tri1_w2": {
+   "file": "results/ptx/group_quant_int8_kernel_w2.ptx",
+   "div_lines": [
+    "div.s32 \t%r16, %r9, %r14;",
+    "div.full.f32 \t%r46, %r44, %r45;",
+    "div.full.f32 \t%r47, %r25, %r8;",
+    "div.full.f32 \t%r48, %r26, %r8;"
+   ],
+   "n_regs": 22,
+   "n_spills": 0
+  },
+  "tri1_w4": {
+   "file": "results/ptx/group_quant_int8_kernel_w4.ptx",
+   "div_lines": [
+    "div.s32 \t%r15, %r8, %r13;",
+    "div.full.f32 \t%r43, %r41, %r42;",
+    "div.full.f32 \t%r44, %r23, %r7;"
+   ],
+   "n_regs": 17,
+   "n_spills": 0
+  },
+  "multi8": {
+   "file": "results/ptx/group_quant_int8_multi8_kernel.ptx",
+   "div_lines": [
+    "div.full.f32 \t%r57, %r55, %r56;",
+    "div.full.f32 \t%r59, %r25, %r58;",
+    "div.full.f32 \t%r60, %r26, %r58;",
+    "div.full.f32 \t%r61, %r27, %r58;",
+    "div.full.f32 \t%r62, %r28, %r58;",
+    "div.full.f32 \t%r63, %r29, %r58;",
+    "div.full.f32 \t%r64, %r30, %r58;",
+    "div.full.f32 \t%r65, %r31, %r58;",
+    "div.full.f32 \t%r66, %r32, %r58;"
+   ],
+   "n_regs": 20,
+   "n_spills": 0
+  },
+  "div_only_default": {
+   "div_lines": [
+    "div.full.f32 \t%r2, %r7, %r1;"
+   ]
+  },
+  "div_only_div_rn": {
+   "div_lines": [
+    "div.rn.ftz.f32 \t%r2, %r7, %r1;"
+   ]
+  }
+ }
+}

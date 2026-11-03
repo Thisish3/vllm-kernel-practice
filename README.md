@@ -23,6 +23,8 @@ flowchart LR
 - `group_quant_op.py` — 위 커널을 `torch.ops.practice.group_quant_int8`로 등록
   (vLLM의 `STABLE_TORCH_LIBRARY` + `STABLE_TORCH_LIBRARY_IMPL` 패턴의 Python판)
 - `test_group_quant.py` — PyTorch 순정 구현과 정확도 비교 + 벤치마크
+- `verify_rtx.py`, `mismatch_breakdown.py` — `verify_claims_colab.ipynb` 2절을 로컬 GPU에서 재실행, PTX 덤프, 불일치 원소 전수 분류
+- `ncu_target.py` + `ncu_run.sh`, `sass_target.py` + `sass_run.sh` — Nsight Compute 지표 / SASS 덤프 (리포트 파일은 저장소 밖에 둠)
 
 ## Colab에서 돌리기
 1. 새 노트북 만들고 이 폴더의 3개 `.py` 파일을 업로드 (또는 같은 내용을 셀에 붙여넣기)
@@ -51,8 +53,8 @@ flowchart LR
 Triton 커널과 PyTorch reference를 완전히 같은 수식으로 짜도, 결과 int8 값이
 0.2% 정도(9472개 중 20개) 다르게 나온 적이 있습니다. Colab T4에서 다시 확인해 보니, 다른 원소는 PyTorch로 계산한
 `x / scale`이 정확히 ±127.000000인 그룹 최댓값 원소였고 Triton 커널은 그 자리에 ±126을 냈습니다. 즉 같은 수식이어도
-두 구현의 fp32 나눗셈 결과가 최하위 비트에서 달라, 정수 경계에서 truncate 결과가 갈립니다(Triton 쪽 나눗셈이 정확히 어떤
-명령으로 컴파일되는지는 확인하지 않았습니다). 로직 버그가 아니므로 `test_group_quant.py`는 "완전 일치"가 아니라
+두 구현의 fp32 나눗셈 결과가 최하위 비트에서 달라, 정수 경계에서 truncate 결과가 갈립니다(Triton 쪽 나눗셈이 어떤
+명령으로 컴파일되는지와, 차이가 반대 방향으로도 나는지는 아래 "RTX 3060 Ti 교차 검증"에서 확인했습니다). 로직 버그가 아니므로 `test_group_quant.py`는 "완전 일치"가 아니라
 "차이는 최대 1, 1% 미만"까지 허용합니다.
 
 ## 실제 vLLM 프로덕션 커널과 비교 (`group_quant_walkthrough.ipynb`)
@@ -151,6 +153,138 @@ Tesla T4, torch 2.11.0+cu130, Triton 3.6.0. fp16 `[4096, 4096]`, `group_size=128
 
 그룹을 32에서 4096으로 128배 키우면 scale 오버헤드는 12.5%에서 0.1%로 줄지만, 오차는 4.30%에서 6.43%로 1.5배가 됩니다.
 정규분포 입력이라 outlier가 거의 없는 경우의 숫자입니다. 실제 활성값처럼 outlier가 있으면 큰 그룹의 오차는 더 커집니다.
+
+## RTX 3060 Ti 교차 검증 ([`verify_rtx.py`](verify_rtx.py), [`results/verify_rtx_3060_ti.json`](results/verify_rtx_3060_ti.json))
+
+위 Colab T4 검증과 같은 코드(`verify_claims_colab.ipynb` 2절, 셀 9·10)를 로컬 GPU에서 다시 돌렸습니다.
+
+- 환경: RTX 3060 Ti 8GB, 드라이버 581.80(nvidia-smi 표시 CUDA 13.0), WSL2 Ubuntu 22.04.
+  torch 2.9.0+cu128, Triton 3.5.0, vLLM 0.11.2를 **pip venv**에 설치해 실행했습니다.
+  이전 측정에 쓴 `vllm/vllm-openai:v0.11.2` 이미지(torch 2.9.0+cu129)는 디스크 용량 문제로 이번에는 쓰지 못했습니다.
+- 시간: `triton.testing.do_bench(return_mode='median')` 5회, 표는 그 중앙값입니다. 5회 값은 JSON에 모두 있습니다.
+  do_bench 결과가 5회 모두 같은 값으로 나온 칸이 있습니다(예: 266.24µs ×5).
+
+**(a) 4096토큰, fp16 `[4096, 4096]`, `group_size=128`**
+
+| 구현 | T4 | RTX 3060 Ti (중앙값) | RTX 3060 Ti 5회 | 3060 Ti 실효 대역폭 |
+|---|---|---|---|---|
+| PyTorch 순정 | 2,811.9µs | 1,632.3µs | 1635.3, 1634.8, 1632.3, 1632.3, 1632.3 | 31.2GB/s |
+| 그룹 1개/프로그램, 4 warp (기본값) | 485.0µs | 266.2µs | 266.2 ×5 | 191.0GB/s |
+| 그룹 1개/프로그램, 2 warp | 254.0µs | 187.4µs | 187.4 ×5 | 271.4GB/s |
+| 그룹 1개/프로그램, 1 warp | 229.2µs | 170.8µs | 170.7, 170.8, 170.8, 171.0, 170.8 | 297.8GB/s |
+| 그룹 8개/프로그램, 4 warp | 202.8µs | 126.0µs | 126.0 ×5 | 403.8GB/s |
+
+- 순서(4 warp > 2 warp > 1 warp > 그룹 8개)는 T4와 같았습니다. 4 → 1 warp 배율은 T4 2.12배, 3060 Ti 1.56배입니다.
+- 512MiB 복사 대역폭: 414.3GB/s(5회 413.8~414.5). 측정 방법은 노트북과 같습니다(fp16 512MiB, do_bench 중앙값).
+- 16·256토큰(중앙값, µs): PyTorch 31.7 / 128.7, 1 warp 4.2 / 14.3, 2 warp 4.3 / 15.4, 4 warp 5.1 / 20.5, 그룹 8개 4.1 / 11.9.
+
+**기존 `results/bench_rtx_3060_ti.json`과 비교 (같은 GPU, `bench_local.py`와 같은 측정법 = do_bench 기본값 `mean`, 5회 중앙값)**
+
+| 4096토큰 | 기존 값 (이미지, cu129) | 이번 값 (venv, cu128) | 이번 5회 |
+|---|---|---|---|
+| PyTorch 순정 | 1,914.2µs | 1,653.4µs | 1653.4, 1677.1, 1635.4, 1635.4, 1672.7 |
+| 그룹 1개 (= 4 warp) | 319.5µs | 271.4µs | 271.4, 271.5, 271.2, 273.0, 269.2 |
+| 그룹 8개 | 140.7µs | 127.2µs | 127.2, 127.3, 126.7, 126.9, 127.8 |
+| 그룹 1개 → 8개 배율 | 2.27배 | 2.13배 | |
+| 그룹 8개 실효 대역폭 (사양 448GB/s 대비) | 361.4GB/s (81%) | 399.8GB/s (89%) | |
+
+같은 GPU인데 이번 값이 모두 더 빠릅니다. 이전과 달라진 것은 실행 환경(컨테이너 → venv, torch cu129 → cu128), 드라이버 시점입니다. 어느 것이 차이를 만들었는지는 확인하지 못했습니다.
+위 "로컬 GPU 실측" 절의 1GiB 복사 349GB/s와 이번 512MiB 복사 414.3GB/s도 측정법(크기·dtype·반복 방식)이 다르고 차이의 원인은 확인하지 못했습니다.
+
+**(b) PyTorch 참조 구현과의 차이** (seed 0, `randn * 5`)
+
+| 항목 | T4 | RTX 3060 Ti |
+|---|---|---|
+| 다른 원소 수 (1,677만 개 중) | 21,743 | 21,654 |
+| 최대 차이 | 1 | 1 |
+| scale 동일 | 예 | 예 |
+| 그룹 8개 == 그룹 1개 (비트 단위) | 예 | 예 |
+
+3060 Ti에서 다른 원소 21,654개를 **전부** 분류했습니다([`mismatch_breakdown.py`](mismatch_breakdown.py), [`results/mismatch_breakdown_rtx_3060_ti.json`](results/mismatch_breakdown_rtx_3060_ti.json)).
+모두 그룹 최댓값 원소였고, 두 가지 경우뿐이었습니다.
+
+| PyTorch `x/scale` | Triton `x/scale` | PyTorch q | Triton q | 개수 |
+|---|---|---|---|---|
+| ±127.0 | ±126.99999237 | ±127 | ±126 | 18,039 |
+| ±126.99999237 | ±127.0 | ±126 | ±127 | 3,615 |
+
+T4 절의 "PyTorch는 정확히 ±127.000000, Triton은 ±126"은 첫 번째 경우에만 맞습니다. T4 노트북은 앞의 5개만 출력했습니다.
+Triton 쪽 `x/scale`은 같은 식을 fp32로 저장하는 커널로 따로 계산했고, 이를 `trunc(clamp(...))`한 값이 실제 커널의 q와 전부 일치하는 것을 확인했습니다.
+전체 1,677만 개 중 두 구현의 `x/scale`이 비트 단위로 다른 원소는 5,296,989개, 최대 차이 1.53e-5였습니다.
+
+**(c) `torch.profiler`로 센 커널 수**: PyTorch 순정 8개, Triton 그룹 1개 1개, 그룹 8개 1개. T4와 같습니다.
+
+### 원인 확인 A — 나눗셈이 어떤 명령으로 컴파일됐나
+
+PTX는 `_group_quant_int8_kernel[grid](...)`가 돌려준 컴파일 결과의 `asm["ptx"]`에서 꺼냈습니다([`results/ptx/`](results/ptx/)).
+`num_warps=4` 커널의 실수 나눗셈 줄은 두 개이고, PTX의 `.loc` 주석으로 소스 줄을 확인했습니다(이 밖의 `div.s32`는 `pid // num_groups`).
+
+```
+	mov.b32 	%r42, 0f42FE0000;                       // 127.0
+	.loc	1 39 21                         // group_quant_triton.py:39:21   scale = absmax / 127.0
+	div.full.f32 	%r43, %r41, %r42;
+	.loc	1 45 34                         // group_quant_triton.py:45:34   x / scale
+	div.full.f32 	%r44, %r23, %r7;
+```
+
+1·2 warp 버전과 그룹 8개 버전도 `x / scale`은 모두 `div.full.f32`였습니다(스레드당 원소 수만큼 반복).
+Nsight Compute로 뽑은 SASS([`results/sass_div.txt`](results/sass_div.txt), [`sass_run.sh`](sass_run.sh))에서는 이 부분이 아래처럼 나왔습니다.
+
+```
+Triton _group_quant_int8_kernel (num_warps=4)
+  72  FMUL R10, R10, 0.0078740157186985015869      # 상수 = 1/127
+  81  MUFU.RCP R4, R4
+  88  FMUL R5, R4, R5
+  89  FMNMX R5, R5, -127, !PT
+  90  FMNMX R5, R5, 127, PT
+  91  F2I.S16.TRUNC.NTZ R5, R5
+PyTorch at::native::elementwise_kernel<..., DivFunctor<float>>
+ 269  MUFU.RCP R3, R9
+ 270  FCHK P0, R0, R9
+ 271  FFMA R4, -R9, R3, 1
+ 272  FFMA R3, R3, R4, R3
+ 273  FFMA R4, R0, R3, RZ
+ 274  FFMA R2, -R9, R4, R0
+ 275  FFMA R3, R3, R2, R4
+ 276  @!P0  BRA 0x500e9af90
+      ... (FCHK가 걸리면 CALL.REL.NOINC 로 별도 경로)
+```
+
+Triton 커널 SASS에는 `FCHK`와 `CALL`이 없었고(전체 112줄), PyTorch 나눗셈 커널에는 각각 2개가 있었습니다.
+같은 입력에서 Triton 나눗셈만 `tl.math.div_rn`(PTX `div.rn.ftz.f32`)으로 바꾸면, 1,677만 개 전부의 `x/scale`이 PyTorch와 비트 단위로 같아졌습니다.
+scale 계산(`absmax / 127.0`)은 Triton SASS에서 상수 곱(`FMUL … 0.00787…`)이었고, PyTorch 쪽도 커널 목록에 나눗셈이 아니라 `MulFunctor`가 있습니다. scale은 두 구현이 같았습니다.
+
+### 원인 확인 B — Nsight Compute ([`ncu_run.sh`](ncu_run.sh), [`ncu_target.py`](ncu_target.py), [`results/ncu_metrics.csv`](results/ncu_metrics.csv))
+
+Nsight Compute 2026.3.1. 2023.2.2는 `Profiling is not supported on device 0 as it uses the Windows Subsystem for Linux (WSL)`로 실행되지 않았습니다.
+2026.3.1도 처음엔 `ERR_NVGPUCTRPERM`이 났고, NVIDIA 제어판에서 "모든 사용자에게 GPU 성능 카운터 액세스 허용"을 켜고 WSL을 재시작한 뒤 동작했습니다.
+입력은 4096토큰, 각 커널은 한 번 워밍업 후 두 번째 실행을 쟀습니다. ncu 시간은 프로파일러 아래에서 잰 값이라 대표 수치로 쓰지 않습니다.
+
+| 지표 | 그룹 1개, 4 warp | 그룹 1개, 1 warp | 그룹 8개, 4 warp |
+|---|---|---|---|
+| grid × block | 131,072 × 128 | 131,072 × 32 | 16,384 × 128 |
+| 스레드당 원소 수 (코드에서 계산) | 128/128 = 1 | 128/32 = 4 | 1024/128 = 8 |
+| 시간 (ncu `gpu__time_duration`) | 304.4µs | 190.8µs | 123.6µs |
+| DRAM 처리량 (peak 대비) | 39.0% | 61.6% | 94.8% |
+| DRAM 처리량 | 169.5GB/s | 267.9GB/s | 411.9GB/s |
+| DRAM 읽기 / 쓰기 | 34.0MB / 17.6MB | 33.6MB / 17.5MB | 33.6MB / 17.3MB |
+| achieved occupancy | 88.0% | 28.0% | 94.5% |
+| theoretical occupancy (제한 요인) | 100% | 33.3% (SM당 블록 16개 한도) | 100% |
+| 실행 명령 수 (warp 단위) | 49,545,216 | 14,811,136 | 8,093,696 |
+| 실행 명령 수 (thread 단위) | 1,577,320,448 | 465,829,888 | 256,638,976 |
+| global load / store 명령 (warp 단위) | 524,288 / 655,360 | 131,072 / 262,144 | 65,536 / 81,920 |
+| SM throughput (peak 대비) | 77.7% | 30.2% | 26.9% |
+
+**4 → 1 warp에서 지표로 설명되는 것**
+- DRAM에서 읽고 쓴 바이트는 거의 같습니다(읽기 34.0 → 33.6MB). 옮긴 데이터 양이 줄어서 빨라진 것은 아닙니다.
+- 실행된 명령 수가 3.35배 줄었습니다(warp 단위 49.5M → 14.8M). global load 명령은 4배, store 명령은 2.5배 줄었습니다.
+- SM throughput은 77.7% → 30.2%로 내려가고, DRAM 처리량은 39.0% → 61.6%로 올라갔습니다.
+- achieved occupancy는 88.0% → 28.0%로 떨어졌는데도 빨라졌습니다. occupancy로는 속도 향상을 설명할 수 없습니다.
+
+**지표로 설명되지 않는 것**
+- 4 warp 커널에서 SM throughput 77.7%를 차지한 것이 SM 안의 어느 유닛인지는 재지 않았습니다. 그래서 명령 수 감소가 시간 감소의 직접 원인인지는 이 표만으로 단정할 수 없습니다.
+- 명령 수는 3.35배 줄었는데 시간은 1.6배(ncu) 줄었습니다. 이 차이는 설명하지 못했습니다.
+- 1 warp → 그룹 8개에서는 명령 수(14.8M → 8.1M), occupancy(28.0 → 94.5%), DRAM 처리량(61.6 → 94.8%)이 함께 바뀌어, 어느 쪽이 시간 차이를 만들었는지 나눌 수 없습니다.
 
 ## `run_vllm_on_colab.ipynb` — vLLM을 실제로 돌려서 병목 확인
 
