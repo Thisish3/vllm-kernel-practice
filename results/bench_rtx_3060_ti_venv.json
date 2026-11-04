@@ -1,0 +1,1163 @@
+{
+  "env": {
+    "nvidia_smi": "NVIDIA GeForce RTX 3060 Ti, 581.80, 8192 MiB, 2130 MHz, 7001 MHz, 200.00 W",
+    "cuda_from_nvidia_smi": "CUDA Version: 13.0",
+    "torch": "2.9.0+cu128",
+    "torch_cuda": "12.8",
+    "triton": "3.5.0",
+    "vllm": "0.11.2",
+    "python": "3.10.12",
+    "kernel": "6.6.87.2-microsoft-standard-WSL2",
+    "repo_commit": "ecd5424fc3a3aee35fc0fd288dd391359bd3e131"
+  },
+  "method": {
+    "script": "bench_local.py, unchanged, one fresh process per run",
+    "runs": 5,
+    "cell": "median over runs of bench_local.py's median of 5 do_bench means",
+    "spec_gbps": 448,
+    "copy": "fp32 1GiB, 5 warmup, 20 copies per repeat, 5 repeats, 2*GiB/time"
+  },
+  "speed": [
+    {
+      "tokens": 16,
+      "min_bytes": 198656,
+      "impls": {
+        "pytorch_ref": {
+          "us_runs": [
+            31.66,
+            30.42,
+            31.53,
+            31.39,
+            33.73
+          ],
+          "us_median": 31.53,
+          "gbps_median": 6.3,
+          "pct_of_spec": 1.4,
+          "time_vs_vllm_cuda": 6.383
+        },
+        "triton_1group": {
+          "us_runs": [
+            4.92,
+            4.99,
+            5.95,
+            6.03,
+            5.2
+          ],
+          "us_median": 5.2,
+          "gbps_median": 38.2,
+          "pct_of_spec": 8.5,
+          "time_vs_vllm_cuda": 1.053
+        },
+        "triton_2groups": {
+          "us_runs": [
+            4.38,
+            4.56,
+            4.49,
+            4.46,
+            5.48
+          ],
+          "us_median": 4.49,
+          "gbps_median": 44.2,
+          "pct_of_spec": 9.9,
+          "time_vs_vllm_cuda": 0.909
+        },
+        "triton_4groups": {
+          "us_runs": [
+            4.22,
+            4.23,
+            4.39,
+            4.48,
+            4.41
+          ],
+          "us_median": 4.39,
+          "gbps_median": 45.3,
+          "pct_of_spec": 10.1,
+          "time_vs_vllm_cuda": 0.889
+        },
+        "triton_8groups": {
+          "us_runs": [
+            4.28,
+            4.32,
+            4.37,
+            5.44,
+            4.51
+          ],
+          "us_median": 4.37,
+          "gbps_median": 45.5,
+          "pct_of_spec": 10.1,
+          "time_vs_vllm_cuda": 0.885
+        },
+        "triton_16groups": {
+          "us_runs": [
+            4.9,
+            4.43,
+            4.31,
+            4.32,
+            4.97
+          ],
+          "us_median": 4.43,
+          "gbps_median": 44.8,
+          "pct_of_spec": 10.0,
+          "time_vs_vllm_cuda": 0.897
+        },
+        "vllm_cuda": {
+          "us_runs": [
+            4.78,
+            4.94,
+            4.9,
+            5.94,
+            5.14
+          ],
+          "us_median": 4.94,
+          "gbps_median": 40.2,
+          "pct_of_spec": 9.0,
+          "time_vs_vllm_cuda": 1.0
+        }
+      }
+    },
+    {
+      "tokens": 256,
+      "min_bytes": 3178496,
+      "impls": {
+        "pytorch_ref": {
+          "us_runs": [
+            126.86,
+            126.27,
+            127.66,
+            127.68,
+            126.99
+          ],
+          "us_median": 126.99,
+          "gbps_median": 25.0,
+          "pct_of_spec": 5.6,
+          "time_vs_vllm_cuda": 10.495
+        },
+        "triton_1group": {
+          "us_runs": [
+            22.16,
+            20.86,
+            22.11,
+            21.15,
+            20.85
+          ],
+          "us_median": 21.15,
+          "gbps_median": 150.3,
+          "pct_of_spec": 33.5,
+          "time_vs_vllm_cuda": 1.748
+        },
+        "triton_2groups": {
+          "us_runs": [
+            12.87,
+            13.17,
+            13.1,
+            13.1,
+            12.93
+          ],
+          "us_median": 13.1,
+          "gbps_median": 242.6,
+          "pct_of_spec": 54.2,
+          "time_vs_vllm_cuda": 1.083
+        },
+        "triton_4groups": {
+          "us_runs": [
+            11.54,
+            11.57,
+            11.74,
+            13.07,
+            11.55
+          ],
+          "us_median": 11.57,
+          "gbps_median": 274.7,
+          "pct_of_spec": 61.3,
+          "time_vs_vllm_cuda": 0.956
+        },
+        "triton_8groups": {
+          "us_runs": [
+            11.73,
+            12.04,
+            11.73,
+            11.91,
+            11.83
+          ],
+          "us_median": 11.83,
+          "gbps_median": 268.7,
+          "pct_of_spec": 60.0,
+          "time_vs_vllm_cuda": 0.978
+        },
+        "triton_16groups": {
+          "us_runs": [
+            12.87,
+            12.58,
+            11.61,
+            11.7,
+            11.65
+          ],
+          "us_median": 11.7,
+          "gbps_median": 271.7,
+          "pct_of_spec": 60.6,
+          "time_vs_vllm_cuda": 0.967
+        },
+        "vllm_cuda": {
+          "us_runs": [
+            12.85,
+            12.0,
+            11.89,
+            12.1,
+            12.36
+          ],
+          "us_median": 12.1,
+          "gbps_median": 262.7,
+          "pct_of_spec": 58.6,
+          "time_vs_vllm_cuda": 1.0
+        }
+      }
+    },
+    {
+      "tokens": 4096,
+      "min_bytes": 50855936,
+      "impls": {
+        "pytorch_ref": {
+          "us_runs": [
+            1658.27,
+            1650.58,
+            1662.55,
+            1663.64,
+            1643.18
+          ],
+          "us_median": 1658.27,
+          "gbps_median": 30.7,
+          "pct_of_spec": 6.8,
+          "time_vs_vllm_cuda": 12.974
+        },
+        "triton_1group": {
+          "us_runs": [
+            272.65,
+            270.87,
+            272.63,
+            272.44,
+            268.15
+          ],
+          "us_median": 272.44,
+          "gbps_median": 186.7,
+          "pct_of_spec": 41.7,
+          "time_vs_vllm_cuda": 2.132
+        },
+        "triton_2groups": {
+          "us_runs": [
+            149.87,
+            146.17,
+            147.2,
+            147.11,
+            147.33
+          ],
+          "us_median": 147.2,
+          "gbps_median": 345.5,
+          "pct_of_spec": 77.1,
+          "time_vs_vllm_cuda": 1.152
+        },
+        "triton_4groups": {
+          "us_runs": [
+            126.95,
+            127.26,
+            126.92,
+            126.95,
+            128.17
+          ],
+          "us_median": 126.95,
+          "gbps_median": 400.6,
+          "pct_of_spec": 89.4,
+          "time_vs_vllm_cuda": 0.993
+        },
+        "triton_8groups": {
+          "us_runs": [
+            127.0,
+            127.0,
+            127.02,
+            127.16,
+            126.86
+          ],
+          "us_median": 127.0,
+          "gbps_median": 400.4,
+          "pct_of_spec": 89.4,
+          "time_vs_vllm_cuda": 0.994
+        },
+        "triton_16groups": {
+          "us_runs": [
+            127.15,
+            127.05,
+            127.14,
+            127.19,
+            128.06
+          ],
+          "us_median": 127.15,
+          "gbps_median": 400.0,
+          "pct_of_spec": 89.3,
+          "time_vs_vllm_cuda": 0.995
+        },
+        "vllm_cuda": {
+          "us_runs": [
+            127.78,
+            127.81,
+            128.38,
+            128.1,
+            127.71
+          ],
+          "us_median": 127.81,
+          "gbps_median": 397.9,
+          "pct_of_spec": 88.8,
+          "time_vs_vllm_cuda": 1.0
+        }
+      }
+    }
+  ],
+  "copy_1GiB": {
+    "gbps_runs": [
+      408.4,
+      405.9,
+      408.6,
+      408.5,
+      408.8
+    ],
+    "gbps_median": 408.5,
+    "pct_of_spec": 91.2
+  },
+  "accuracy_4096x4096": {
+    "input": "torch.manual_seed(0); randn(4096, 4096, fp16) * 5; group_size 128",
+    "triton_8groups": {
+      "numel": 16777216,
+      "q_mismatch": 21654,
+      "q_max_diff": 1,
+      "scale_numel": 131072,
+      "scale_not_equal": 0,
+      "scale_max_rel_diff": 0.0
+    },
+    "vllm_cuda_op": {
+      "numel": 16777216,
+      "q_mismatch": 6041,
+      "q_max_diff": 1,
+      "scale_numel": 131072,
+      "scale_not_equal": 6893,
+      "scale_max_rel_diff": 1.1909207842109026e-07
+    },
+    "op_equals_wrapper": true
+  },
+  "bench_local_accuracy_per_run": [
+    {
+      "triton_1group": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_2groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_4groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_8groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_16groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "vllm_cuda": {
+        "q_mismatch": 5950,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 1.1909207842109026e-07
+      }
+    },
+    {
+      "triton_1group": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_2groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_4groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_8groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_16groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "vllm_cuda": {
+        "q_mismatch": 5950,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 1.1909207842109026e-07
+      }
+    },
+    {
+      "triton_1group": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_2groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_4groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_8groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_16groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "vllm_cuda": {
+        "q_mismatch": 5950,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 1.1909207842109026e-07
+      }
+    },
+    {
+      "triton_1group": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_2groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_4groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_8groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_16groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "vllm_cuda": {
+        "q_mismatch": 5950,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 1.1909207842109026e-07
+      }
+    },
+    {
+      "triton_1group": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_2groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_4groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_8groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "triton_16groups": {
+        "q_mismatch": 21690,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 0.0
+      },
+      "vllm_cuda": {
+        "q_mismatch": 5950,
+        "q_max_diff": 1,
+        "numel": 16777216,
+        "scale_max_rel_diff": 1.1909207842109026e-07
+      }
+    }
+  ],
+  "kernel_launches_per_run": [
+    {
+      "pytorch_ref": 8,
+      "triton_1group": 1,
+      "triton_2groups": 1,
+      "triton_4groups": 1,
+      "triton_8groups": 1,
+      "triton_16groups": 1,
+      "vllm_cuda": 1
+    },
+    {
+      "pytorch_ref": 8,
+      "triton_1group": 1,
+      "triton_2groups": 1,
+      "triton_4groups": 1,
+      "triton_8groups": 1,
+      "triton_16groups": 1,
+      "vllm_cuda": 1
+    },
+    {
+      "pytorch_ref": 8,
+      "triton_1group": 1,
+      "triton_2groups": 1,
+      "triton_4groups": 1,
+      "triton_8groups": 1,
+      "triton_16groups": 1,
+      "vllm_cuda": 1
+    },
+    {
+      "pytorch_ref": 8,
+      "triton_1group": 1,
+      "triton_2groups": 1,
+      "triton_4groups": 1,
+      "triton_8groups": 1,
+      "triton_16groups": 1,
+      "vllm_cuda": 1
+    },
+    {
+      "pytorch_ref": 8,
+      "triton_1group": 1,
+      "triton_2groups": 1,
+      "triton_4groups": 1,
+      "triton_8groups": 1,
+      "triton_16groups": 1,
+      "vllm_cuda": 1
+    }
+  ],
+  "group_size_sweep_run1": [
+    {
+      "group_size": 32,
+      "mean_abs_err": 0.04511,
+      "mean_rel_err_pct": 4.303,
+      "scale_kb": 2048.0,
+      "scale_overhead_pct_of_int8": 12.5
+    },
+    {
+      "group_size": 64,
+      "mean_abs_err": 0.05039,
+      "mean_rel_err_pct": 4.697,
+      "scale_kb": 1024.0,
+      "scale_overhead_pct_of_int8": 6.25
+    },
+    {
+      "group_size": 128,
+      "mean_abs_err": 0.05514,
+      "mean_rel_err_pct": 5.048,
+      "scale_kb": 512.0,
+      "scale_overhead_pct_of_int8": 3.125
+    },
+    {
+      "group_size": 256,
+      "mean_abs_err": 0.05948,
+      "mean_rel_err_pct": 5.364,
+      "scale_kb": 256.0,
+      "scale_overhead_pct_of_int8": 1.562
+    },
+    {
+      "group_size": 512,
+      "mean_abs_err": 0.06352,
+      "mean_rel_err_pct": 5.659,
+      "scale_kb": 128.0,
+      "scale_overhead_pct_of_int8": 0.781
+    },
+    {
+      "group_size": 1024,
+      "mean_abs_err": 0.06728,
+      "mean_rel_err_pct": 5.931,
+      "scale_kb": 64.0,
+      "scale_overhead_pct_of_int8": 0.391
+    },
+    {
+      "group_size": 2048,
+      "mean_abs_err": 0.07082,
+      "mean_rel_err_pct": 6.187,
+      "scale_kb": 32.0,
+      "scale_overhead_pct_of_int8": 0.195
+    },
+    {
+      "group_size": 4096,
+      "mean_abs_err": 0.07423,
+      "mean_rel_err_pct": 6.432,
+      "scale_kb": 16.0,
+      "scale_overhead_pct_of_int8": 0.098
+    }
+  ],
+  "raw_runs_speed": [
+    [
+      {
+        "tokens": 16,
+        "min_bytes": 198656,
+        "impls": {
+          "pytorch_ref": {
+            "us": 31.66,
+            "gbps": 6.3
+          },
+          "triton_1group": {
+            "us": 4.92,
+            "gbps": 40.3
+          },
+          "triton_2groups": {
+            "us": 4.38,
+            "gbps": 45.3
+          },
+          "triton_4groups": {
+            "us": 4.22,
+            "gbps": 47.0
+          },
+          "triton_8groups": {
+            "us": 4.28,
+            "gbps": 46.5
+          },
+          "triton_16groups": {
+            "us": 4.9,
+            "gbps": 40.6
+          },
+          "vllm_cuda": {
+            "us": 4.78,
+            "gbps": 41.6
+          }
+        }
+      },
+      {
+        "tokens": 256,
+        "min_bytes": 3178496,
+        "impls": {
+          "pytorch_ref": {
+            "us": 126.86,
+            "gbps": 25.1
+          },
+          "triton_1group": {
+            "us": 22.16,
+            "gbps": 143.4
+          },
+          "triton_2groups": {
+            "us": 12.87,
+            "gbps": 246.9
+          },
+          "triton_4groups": {
+            "us": 11.54,
+            "gbps": 275.5
+          },
+          "triton_8groups": {
+            "us": 11.73,
+            "gbps": 270.9
+          },
+          "triton_16groups": {
+            "us": 12.87,
+            "gbps": 247.0
+          },
+          "vllm_cuda": {
+            "us": 12.85,
+            "gbps": 247.3
+          }
+        }
+      },
+      {
+        "tokens": 4096,
+        "min_bytes": 50855936,
+        "impls": {
+          "pytorch_ref": {
+            "us": 1658.27,
+            "gbps": 30.7
+          },
+          "triton_1group": {
+            "us": 272.65,
+            "gbps": 186.5
+          },
+          "triton_2groups": {
+            "us": 149.87,
+            "gbps": 339.3
+          },
+          "triton_4groups": {
+            "us": 126.95,
+            "gbps": 400.6
+          },
+          "triton_8groups": {
+            "us": 127.0,
+            "gbps": 400.4
+          },
+          "triton_16groups": {
+            "us": 127.15,
+            "gbps": 400.0
+          },
+          "vllm_cuda": {
+            "us": 127.78,
+            "gbps": 398.0
+          }
+        }
+      }
+    ],
+    [
+      {
+        "tokens": 16,
+        "min_bytes": 198656,
+        "impls": {
+          "pytorch_ref": {
+            "us": 30.42,
+            "gbps": 6.5
+          },
+          "triton_1group": {
+            "us": 4.99,
+            "gbps": 39.8
+          },
+          "triton_2groups": {
+            "us": 4.56,
+            "gbps": 43.6
+          },
+          "triton_4groups": {
+            "us": 4.23,
+            "gbps": 46.9
+          },
+          "triton_8groups": {
+            "us": 4.32,
+            "gbps": 45.9
+          },
+          "triton_16groups": {
+            "us": 4.43,
+            "gbps": 44.8
+          },
+          "vllm_cuda": {
+            "us": 4.94,
+            "gbps": 40.2
+          }
+        }
+      },
+      {
+        "tokens": 256,
+        "min_bytes": 3178496,
+        "impls": {
+          "pytorch_ref": {
+            "us": 126.27,
+            "gbps": 25.2
+          },
+          "triton_1group": {
+            "us": 20.86,
+            "gbps": 152.4
+          },
+          "triton_2groups": {
+            "us": 13.17,
+            "gbps": 241.4
+          },
+          "triton_4groups": {
+            "us": 11.57,
+            "gbps": 274.7
+          },
+          "triton_8groups": {
+            "us": 12.04,
+            "gbps": 264.0
+          },
+          "triton_16groups": {
+            "us": 12.58,
+            "gbps": 252.7
+          },
+          "vllm_cuda": {
+            "us": 12.0,
+            "gbps": 264.8
+          }
+        }
+      },
+      {
+        "tokens": 4096,
+        "min_bytes": 50855936,
+        "impls": {
+          "pytorch_ref": {
+            "us": 1650.58,
+            "gbps": 30.8
+          },
+          "triton_1group": {
+            "us": 270.87,
+            "gbps": 187.7
+          },
+          "triton_2groups": {
+            "us": 146.17,
+            "gbps": 347.9
+          },
+          "triton_4groups": {
+            "us": 127.26,
+            "gbps": 399.6
+          },
+          "triton_8groups": {
+            "us": 127.0,
+            "gbps": 400.5
+          },
+          "triton_16groups": {
+            "us": 127.05,
+            "gbps": 400.3
+          },
+          "vllm_cuda": {
+            "us": 127.81,
+            "gbps": 397.9
+          }
+        }
+      }
+    ],
+    [
+      {
+        "tokens": 16,
+        "min_bytes": 198656,
+        "impls": {
+          "pytorch_ref": {
+            "us": 31.53,
+            "gbps": 6.3
+          },
+          "triton_1group": {
+            "us": 5.95,
+            "gbps": 33.4
+          },
+          "triton_2groups": {
+            "us": 4.49,
+            "gbps": 44.2
+          },
+          "triton_4groups": {
+            "us": 4.39,
+            "gbps": 45.3
+          },
+          "triton_8groups": {
+            "us": 4.37,
+            "gbps": 45.5
+          },
+          "triton_16groups": {
+            "us": 4.31,
+            "gbps": 46.1
+          },
+          "vllm_cuda": {
+            "us": 4.9,
+            "gbps": 40.5
+          }
+        }
+      },
+      {
+        "tokens": 256,
+        "min_bytes": 3178496,
+        "impls": {
+          "pytorch_ref": {
+            "us": 127.66,
+            "gbps": 24.9
+          },
+          "triton_1group": {
+            "us": 22.11,
+            "gbps": 143.7
+          },
+          "triton_2groups": {
+            "us": 13.1,
+            "gbps": 242.7
+          },
+          "triton_4groups": {
+            "us": 11.74,
+            "gbps": 270.8
+          },
+          "triton_8groups": {
+            "us": 11.73,
+            "gbps": 270.9
+          },
+          "triton_16groups": {
+            "us": 11.61,
+            "gbps": 273.9
+          },
+          "vllm_cuda": {
+            "us": 11.89,
+            "gbps": 267.2
+          }
+        }
+      },
+      {
+        "tokens": 4096,
+        "min_bytes": 50855936,
+        "impls": {
+          "pytorch_ref": {
+            "us": 1662.55,
+            "gbps": 30.6
+          },
+          "triton_1group": {
+            "us": 272.63,
+            "gbps": 186.5
+          },
+          "triton_2groups": {
+            "us": 147.2,
+            "gbps": 345.5
+          },
+          "triton_4groups": {
+            "us": 126.92,
+            "gbps": 400.7
+          },
+          "triton_8groups": {
+            "us": 127.02,
+            "gbps": 400.4
+          },
+          "triton_16groups": {
+            "us": 127.14,
+            "gbps": 400.0
+          },
+          "vllm_cuda": {
+            "us": 128.38,
+            "gbps": 396.1
+          }
+        }
+      }
+    ],
+    [
+      {
+        "tokens": 16,
+        "min_bytes": 198656,
+        "impls": {
+          "pytorch_ref": {
+            "us": 31.39,
+            "gbps": 6.3
+          },
+          "triton_1group": {
+            "us": 6.03,
+            "gbps": 32.9
+          },
+          "triton_2groups": {
+            "us": 4.46,
+            "gbps": 44.5
+          },
+          "triton_4groups": {
+            "us": 4.48,
+            "gbps": 44.3
+          },
+          "triton_8groups": {
+            "us": 5.44,
+            "gbps": 36.5
+          },
+          "triton_16groups": {
+            "us": 4.32,
+            "gbps": 46.0
+          },
+          "vllm_cuda": {
+            "us": 5.94,
+            "gbps": 33.4
+          }
+        }
+      },
+      {
+        "tokens": 256,
+        "min_bytes": 3178496,
+        "impls": {
+          "pytorch_ref": {
+            "us": 127.68,
+            "gbps": 24.9
+          },
+          "triton_1group": {
+            "us": 21.15,
+            "gbps": 150.3
+          },
+          "triton_2groups": {
+            "us": 13.1,
+            "gbps": 242.7
+          },
+          "triton_4groups": {
+            "us": 13.07,
+            "gbps": 243.2
+          },
+          "triton_8groups": {
+            "us": 11.91,
+            "gbps": 266.8
+          },
+          "triton_16groups": {
+            "us": 11.7,
+            "gbps": 271.7
+          },
+          "vllm_cuda": {
+            "us": 12.1,
+            "gbps": 262.6
+          }
+        }
+      },
+      {
+        "tokens": 4096,
+        "min_bytes": 50855936,
+        "impls": {
+          "pytorch_ref": {
+            "us": 1663.64,
+            "gbps": 30.6
+          },
+          "triton_1group": {
+            "us": 272.44,
+            "gbps": 186.7
+          },
+          "triton_2groups": {
+            "us": 147.11,
+            "gbps": 345.7
+          },
+          "triton_4groups": {
+            "us": 126.95,
+            "gbps": 400.6
+          },
+          "triton_8groups": {
+            "us": 127.16,
+            "gbps": 399.9
+          },
+          "triton_16groups": {
+            "us": 127.19,
+            "gbps": 399.9
+          },
+          "vllm_cuda": {
+            "us": 128.1,
+            "gbps": 397.0
+          }
+        }
+      }
+    ],
+    [
+      {
+        "tokens": 16,
+        "min_bytes": 198656,
+        "impls": {
+          "pytorch_ref": {
+            "us": 33.73,
+            "gbps": 5.9
+          },
+          "triton_1group": {
+            "us": 5.2,
+            "gbps": 38.2
+          },
+          "triton_2groups": {
+            "us": 5.48,
+            "gbps": 36.3
+          },
+          "triton_4groups": {
+            "us": 4.41,
+            "gbps": 45.0
+          },
+          "triton_8groups": {
+            "us": 4.51,
+            "gbps": 44.1
+          },
+          "triton_16groups": {
+            "us": 4.97,
+            "gbps": 40.0
+          },
+          "vllm_cuda": {
+            "us": 5.14,
+            "gbps": 38.7
+          }
+        }
+      },
+      {
+        "tokens": 256,
+        "min_bytes": 3178496,
+        "impls": {
+          "pytorch_ref": {
+            "us": 126.99,
+            "gbps": 25.0
+          },
+          "triton_1group": {
+            "us": 20.85,
+            "gbps": 152.4
+          },
+          "triton_2groups": {
+            "us": 12.93,
+            "gbps": 245.7
+          },
+          "triton_4groups": {
+            "us": 11.55,
+            "gbps": 275.1
+          },
+          "triton_8groups": {
+            "us": 11.83,
+            "gbps": 268.7
+          },
+          "triton_16groups": {
+            "us": 11.65,
+            "gbps": 272.8
+          },
+          "vllm_cuda": {
+            "us": 12.36,
+            "gbps": 257.2
+          }
+        }
+      },
+      {
+        "tokens": 4096,
+        "min_bytes": 50855936,
+        "impls": {
+          "pytorch_ref": {
+            "us": 1643.18,
+            "gbps": 30.9
+          },
+          "triton_1group": {
+            "us": 268.15,
+            "gbps": 189.7
+          },
+          "triton_2groups": {
+            "us": 147.33,
+            "gbps": 345.2
+          },
+          "triton_4groups": {
+            "us": 128.17,
+            "gbps": 396.8
+          },
+          "triton_8groups": {
+            "us": 126.86,
+            "gbps": 400.9
+          },
+          "triton_16groups": {
+            "us": 128.06,
+            "gbps": 397.1
+          },
+          "vllm_cuda": {
+            "us": 127.71,
+            "gbps": 398.2
+          }
+        }
+      }
+    ]
+  ]
+}
