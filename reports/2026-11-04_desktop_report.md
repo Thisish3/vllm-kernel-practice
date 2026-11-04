@@ -173,4 +173,4 @@ RemoteProtocolError("illegal status line: bytearray(b'0')")
 ```
 
 5. `gh`가 설치되어 있지 않아 PR 페이지를 조회하지 못했습니다. PR 코드는 설치된 main과 PR 패키지의 `diff`로 확인했습니다. 설치 커밋은 환경 항목에 있습니다.
-6. guidellm 설치 중 torch가 따라 들어와 venv가 각각 5.9G가 되었고, C: 여유 공간이 25G에서 5.4G로 줄었습니다. WSL vhdx는 자동으로 줄지 않습니다.
+6. guidellm 설치 중 torch가 따라 들어와 venv가 각각 5.9G가 되었고, C: 여유 공간이 25G에서 5.4G로 줄었습니다. WSL vhdx는 자동으로 줄지 않습니다. 측정 후 사용자 요청으로 디스크를 정리해 C: 여유 공간은 131.8G가 되었습니다. 이때 `/root/venv-guidellm-main`, `/root/venv-guidellm-pr`를 지웠으므로 `guidellm_usage_check/run.sh`를 다시 돌리려면 재설치가 필요합니다(`/root/uv-python`의 Python 3.12는 남아 있습니다). `/home/a/.cache/huggingface`의 모델과 `/home/a/models/Mistral-7B-Instruct-v0.3`도 지웠습니다. `/root/venv-vllm0112`와 `/data/hf-cache`는 그대로입니다.
