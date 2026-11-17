@@ -1,8 +1,10 @@
-# vLLM 커널 실습 — group quantization
+# vLLM의 group quantization 커널을 Triton으로 다시 짜 보기
 
-vLLM의 `csrc/libtorch_stable/quantization/w8a8/fp8/per_token_group_quant.cu`
-(`per_token_group_quant_8bit_kernel`)을 단순화해서 Triton으로 다시 구현하고,
-`torch.ops.*`로 등록해본 연습 프로젝트입니다.
+vLLM의 `per_token_group_quant_8bit_kernel`(CUDA, `csrc/libtorch_stable/quantization/w8a8/fp8/per_token_group_quant.cu`)을 단순하게 줄여 Triton으로 옮기고, `torch.ops.practice.group_quant_int8`로 등록해 본 저장소입니다. 해 보고 남은 건 이 세 가지입니다.
+
+- 프로그램 하나가 그룹 8개를 맡게 바꾸자 272.4 µs에서 127.0 µs로 줄었습니다(2.15배, 메모리 대역폭의 89 %). vLLM의 CUDA 커널(127.8 µs)과 같은 수준입니다. RTX 3060 Ti에서 잰 값입니다.
+- PyTorch 결과와 1씩 어긋나는 원소가 몇 개 있었습니다. PTX를 열어 보니 나눗셈이 빠른 근사 명령(`div.full.f32`)으로 컴파일돼 있었고, `div_rn`으로 바꾸자 비트까지 같아졌습니다.
+- Colab T4와 로컬 GPU, Nsight Compute로 같은 주장을 두 번씩 확인했습니다. 처음 적었던 "1.11배 더 빠르다"는 다시 재 보니 맞지 않아서 지웠습니다.
 
 ## 커널이 하는 일
 
@@ -17,14 +19,14 @@ flowchart LR
 ```
 
 ## 파일
-- `group_quant_triton.py` — 실제 Triton 커널 (`@triton.jit`)
-- `group_quant_triton_multi.py` — 프로그램 하나가 그룹 여러 개를 처리하는 버전 (원본의 `groups_per_block`)
-- `bench_local.py` — PyTorch 순정 / 우리 Triton / vLLM CUDA 커널 속도·정확도 비교와 `group_size` 스윕
-- `group_quant_op.py` — 위 커널을 `torch.ops.practice.group_quant_int8`로 등록
+- `group_quant_triton.py`: 실제 Triton 커널 (`@triton.jit`)
+- `group_quant_triton_multi.py`: 프로그램 하나가 그룹 여러 개를 처리하는 버전 (원본의 `groups_per_block`)
+- `bench_local.py`: PyTorch 순정 / 우리 Triton / vLLM CUDA 커널 속도·정확도 비교와 `group_size` 스윕
+- `group_quant_op.py`: 위 커널을 `torch.ops.practice.group_quant_int8`로 등록
   (vLLM의 `STABLE_TORCH_LIBRARY` + `STABLE_TORCH_LIBRARY_IMPL` 패턴의 Python판)
-- `test_group_quant.py` — PyTorch 순정 구현과 정확도 비교 + 벤치마크
-- `verify_rtx.py`, `mismatch_breakdown.py` — `verify_claims_colab.ipynb` 2절을 로컬 GPU에서 재실행, PTX 덤프, 불일치 원소 전수 분류
-- `ncu_target.py` + `ncu_run.sh`, `sass_target.py` + `sass_run.sh` — Nsight Compute 지표 / SASS 덤프 (리포트 파일은 저장소 밖에 둠)
+- `test_group_quant.py`: PyTorch 순정 구현과 정확도 비교 + 벤치마크
+- `verify_rtx.py`, `mismatch_breakdown.py`: `verify_claims_colab.ipynb` 2절을 로컬 GPU에서 재실행, PTX 덤프, 불일치 원소 전수 분류
+- `ncu_target.py` + `ncu_run.sh`, `sass_target.py` + `sass_run.sh`: Nsight Compute 지표 / SASS 덤프 (리포트 파일은 저장소 밖에 둠)
 
 ## Colab에서 돌리기
 1. 새 노트북 만들고 이 폴더의 3개 `.py` 파일을 업로드 (또는 같은 내용을 셀에 붙여넣기)
@@ -67,7 +69,7 @@ Triton 커널과 PyTorch reference를 완전히 같은 수식으로 짜도, 결�
 ## 실제 vLLM 프로덕션 커널과 비교 (`group_quant_walkthrough.ipynb`)
 
 우리 Triton 커널(program 1개 = group 1개, 단순화)과 vLLM 프로덕션 CUDA 커널
-(`per_token_group_quant_int8` — block 1개가 여러 group을 shared memory 캐싱 +
+(`per_token_group_quant_int8`: block 1개가 여러 group을 shared memory 캐싱 +
 워프 셔플 리덕션으로 처리)을 `torch.ops.*`로 직접 호출해 3-way 벤치마크했습니다.
 
 ```mermaid
@@ -83,10 +85,10 @@ flowchart TB
 ```
 
 `group_size`를 32~4096까지 스윕해서 속도·양자화 오차·scale 메모리 오버헤드를
-같이 재봤습니다 — 그룹이 작을수록 오차는 줄지만 scale 저장 비용이 늘어나는
+같이 재봤습니다: 그룹이 작을수록 오차는 줄지만 scale 저장 비용이 늘어나는
 전형적인 edge-device 트레이드오프입니다.
 
-## 로컬 GPU 실측 — RTX 3060 Ti (`bench_local.py`)
+## 로컬 GPU 실측: RTX 3060 Ti (`bench_local.py`)
 
 노트북에는 실행 결과가 남아 있지 않아서, 로컬 GPU에서 같은 비교를 다시 재고 숫자를 남겼습니다.
 torch, Triton, vLLM `_C` 확장이 모두 들어 있는 `vllm/vllm-openai:v0.11.2` 이미지 안에서 `python bench_local.py`로 실행했고,
@@ -107,7 +109,7 @@ torch, Triton, vLLM `_C` 확장이 모두 들어 있는 `vllm/vllm-openai:v0.11.
 | 우리 Triton, 그룹 16개 | 7.0µs | 12.9µs | 146.5µs | 347.0GB/s (77%) |
 | **vLLM CUDA** (`per_token_group_quant_int8`) | 8.9µs | **11.9µs** | 155.7µs | 326.6GB/s (73%) |
 
-**venv 재측정 (2026-11-04)** — 같은 GPU, vLLM 0.11.2가 설치된 WSL2 venv(torch 2.9.0+cu128, Triton 3.5.0).
+**venv 재측정 (2026-11-04)**: 같은 GPU, vLLM 0.11.2가 설치된 WSL2 venv(torch 2.9.0+cu128, Triton 3.5.0).
 `bench_local.py`를 수정 없이 새 프로세스로 5번 실행한 값의 중앙값입니다([`results/bench_rtx_3060_ti_venv.json`](results/bench_rtx_3060_ti_venv.json), 실행 드라이버 [`bench_venv.py`](bench_venv.py)).
 이력서와 블로그는 이 값을 씁니다. 위 표(이미지, cu129)와 차이가 나는 원인은 확인하지 못했습니다.
 
@@ -235,7 +237,7 @@ Triton 쪽 `x/scale`은 같은 식을 fp32로 저장하는 커널로 따로 계�
 
 **(c) `torch.profiler`로 센 커널 수**: PyTorch 순정 8개, Triton 그룹 1개 1개, 그룹 8개 1개. T4와 같습니다.
 
-### 원인 확인 A — 나눗셈이 어떤 명령으로 컴파일됐나
+### 원인 확인 A: 나눗셈이 어떤 명령으로 컴파일됐나
 
 PTX는 `_group_quant_int8_kernel[grid](...)`가 돌려준 컴파일 결과의 `asm["ptx"]`에서 꺼냈습니다([`results/ptx/`](results/ptx/)).
 `num_warps=4` 커널의 실수 나눗셈 줄은 두 개이고, PTX의 `.loc` 주석으로 소스 줄을 확인했습니다(이 밖의 `div.s32`는 `pid // num_groups`).
@@ -275,7 +277,7 @@ Triton 커널 SASS에는 `FCHK`와 `CALL`이 없었고(전체 112줄), PyTorch �
 같은 입력에서 Triton 나눗셈만 `tl.math.div_rn`(PTX `div.rn.ftz.f32`)으로 바꾸면, 1,677만 개 전부의 `x/scale`이 PyTorch와 비트 단위로 같아졌습니다.
 scale 계산(`absmax / 127.0`)은 Triton SASS에서 상수 곱(`FMUL … 0.00787…`)이었고, PyTorch 쪽도 커널 목록에 나눗셈이 아니라 `MulFunctor`가 있습니다. scale은 두 구현이 같았습니다.
 
-### 원인 확인 B — Nsight Compute ([`ncu_run.sh`](ncu_run.sh), [`ncu_target.py`](ncu_target.py), [`results/ncu_metrics.csv`](results/ncu_metrics.csv))
+### 원인 확인 B: Nsight Compute ([`ncu_run.sh`](ncu_run.sh), [`ncu_target.py`](ncu_target.py), [`results/ncu_metrics.csv`](results/ncu_metrics.csv))
 
 Nsight Compute 2026.3.1. 2023.2.2는 `Profiling is not supported on device 0 as it uses the Windows Subsystem for Linux (WSL)`로 실행되지 않았습니다.
 2026.3.1도 처음엔 `ERR_NVGPUCTRPERM`이 났고, NVIDIA 제어판에서 "모든 사용자에게 GPU 성능 카운터 액세스 허용"을 켜고 WSL을 재시작한 뒤 동작했습니다.
@@ -307,7 +309,7 @@ Nsight Compute 2026.3.1. 2023.2.2는 `Profiling is not supported on device 0 as 
 - 명령 수는 3.35배 줄었는데 시간은 1.6배(ncu) 줄었습니다. 이 차이는 설명하지 못했습니다.
 - 1 warp → 그룹 8개에서는 명령 수(14.8M → 8.1M), occupancy(28.0 → 94.5%), DRAM 처리량(61.6 → 94.8%)이 함께 바뀌어, 어느 쪽이 시간 차이를 만들었는지 나눌 수 없습니다.
 
-## `run_vllm_on_colab.ipynb` — vLLM을 실제로 돌려서 병목 확인
+## `run_vllm_on_colab.ipynb`: vLLM을 실제로 돌려서 병목 확인
 
 커널 하나만 보는 대신, vLLM 자체를 Colab GPU에서 띄워 TinyLlama-1.1B로 실제
 추론을 돌리고 `torch.profiler`로 GPU 시간을 프로파일링했습니다.
@@ -339,6 +341,6 @@ weight-only 양자화로 이 시간이 얼마나 줄어드는지는 재지 않�
   직접 수치로 확인
 - ~~`_group_quant_int8_kernel`을 원본처럼 "프로그램 하나가 여러 그룹을 처리"하도록
   바꿔보고 성능이 어떻게 달라지는지 비교~~ → 했습니다. 위 "로컬 GPU 실측" 참고 (4096토큰에서 2.15배, venv 재측정)
-- 그룹 수를 shape에 따라 자동으로 고르기 (`triton.autotune`) — 위 실측에서 크기마다 최적값이 달랐음
+- 그룹 수를 shape에 따라 자동으로 고르기 (`triton.autotune`): 위 실측에서 크기마다 최적값이 달랐음
 - INT8 대신 INT4로 바꿔서 압축률/정확도 트레이드오프 실험 (edge 메모리 제약
   시나리오에 더 가까움)
