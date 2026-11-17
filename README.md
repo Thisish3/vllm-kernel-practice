@@ -30,7 +30,7 @@ flowchart LR
 
 ## Colab에서 돌리기
 1. 새 노트북 만들고 이 폴더의 3개 `.py` 파일을 업로드 (또는 같은 내용을 셀에 붙여넣기)
-2. **런타임 > 런타임 유형 변경 > GPU** 선택
+2. 런타임 > 런타임 유형 변경 > GPU 선택
 3. 셀에서:
    ```python
    !python test_group_quant.py
@@ -42,7 +42,7 @@ flowchart LR
 
 ## 원본 CUDA 커널과 다른/단순화한 부분
 - 원본은 블록 하나가 여러 그룹(`groups_per_block`)을 처리하고 그룹 하나를
-  16개 스레드가 나눠 처리하지만, 여기서는 **Triton 프로그램 하나 = 그룹 하나**로
+  16개 스레드가 나눠 처리하지만, 여기서는 Triton 프로그램 하나 = 그룹 하나로
   단순화했습니다 (`grid = num_tokens * num_groups`).
 - 원본은 워프 셔플로 리덕션하고 shared memory에 값을 캐싱해 DRAM을 한 번만
   읽지만, 여기서는 `tl.max`로 리덕션을 Triton이 알아서 처리하게 맡겼습니다.
@@ -105,11 +105,11 @@ torch, Triton, vLLM `_C` 확장이 모두 들어 있는 `vllm/vllm-openai:v0.11.
 | 우리 Triton, 그룹 1개/프로그램 | 5.2µs | 29.0µs | 319.5µs | 159.2GB/s (36%) |
 | 우리 Triton, 그룹 2개 | 4.6µs | 14.1µs | 177.1µs | 287.2GB/s (64%) |
 | 우리 Triton, 그룹 4개 | 5.5µs | 13.4µs | 148.7µs | 341.9GB/s (76%) |
-| **우리 Triton, 그룹 8개** | 9.4µs | 15.9µs | **140.7µs** | **361.4GB/s (81%)** |
+| 우리 Triton, 그룹 8개 | 9.4µs | 15.9µs | 140.7µs | 361.4GB/s (81%) |
 | 우리 Triton, 그룹 16개 | 7.0µs | 12.9µs | 146.5µs | 347.0GB/s (77%) |
-| **vLLM CUDA** (`per_token_group_quant_int8`) | 8.9µs | **11.9µs** | 155.7µs | 326.6GB/s (73%) |
+| vLLM CUDA (`per_token_group_quant_int8`) | 8.9µs | 11.9µs | 155.7µs | 326.6GB/s (73%) |
 
-**venv 재측정 (2026-11-04)**: 같은 GPU, vLLM 0.11.2가 설치된 WSL2 venv(torch 2.9.0+cu128, Triton 3.5.0).
+venv 재측정 (2026-11-04): 같은 GPU, vLLM 0.11.2가 설치된 WSL2 venv(torch 2.9.0+cu128, Triton 3.5.0).
 `bench_local.py`를 수정 없이 새 프로세스로 5번 실행한 값의 중앙값입니다([`results/bench_rtx_3060_ti_venv.json`](results/bench_rtx_3060_ti_venv.json), 실행 드라이버 [`bench_venv.py`](bench_venv.py)).
 이력서와 블로그는 이 값을 씁니다. 위 표(이미지, cu129)와 차이가 나는 원인은 확인하지 못했습니다.
 
@@ -118,22 +118,22 @@ torch, Triton, vLLM `_C` 확장이 모두 들어 있는 `vllm/vllm-openai:v0.11.
 | PyTorch 순정 (커널 8개) | 31.5µs | 127.0µs | 1,658.3µs | 30.7GB/s (7%) |
 | 우리 Triton, 그룹 1개/프로그램 | 5.2µs | 21.2µs | 272.4µs | 186.7GB/s (42%) |
 | 우리 Triton, 그룹 2개 | 4.5µs | 13.1µs | 147.2µs | 345.5GB/s (77%) |
-| 우리 Triton, 그룹 4개 | 4.4µs | **11.6µs** | **127.0µs** | 400.6GB/s (89%) |
-| **우리 Triton, 그룹 8개** | **4.4µs** | 11.8µs | **127.0µs** | **400.4GB/s (89%)** |
+| 우리 Triton, 그룹 4개 | 4.4µs | 11.6µs | 127.0µs | 400.6GB/s (89%) |
+| 우리 Triton, 그룹 8개 | 4.4µs | 11.8µs | 127.0µs | 400.4GB/s (89%) |
 | 우리 Triton, 그룹 16개 | 4.4µs | 11.7µs | 127.2µs | 400.0GB/s (89%) |
 | vLLM CUDA (`per_token_group_quant_int8`) | 4.9µs | 12.1µs | 127.8µs | 397.9GB/s (89%) |
 
-**핵심 발견** (venv 재측정 기준)
-1. **프로그램당 그룹 수가 성능 차이의 대부분이었습니다.** 그룹 1개짜리 원래 커널은 4096토큰에서 사양 대역폭의 42%만 썼고,
+핵심 발견 (venv 재측정 기준)
+1. 프로그램당 그룹 수가 성능 차이의 대부분이었습니다. 그룹 1개짜리 원래 커널은 4096토큰에서 사양 대역폭의 42%만 썼고,
    그룹 8개로 바꾸자 2.15배 빨라져 89%가 됐습니다(이미지 측정에서는 319.5 → 140.7µs, 2.27배). 프로그램 수를 그대로 두고 warp 수만 4 → 1로 줄여도 빨라졌으므로(아래 "Colab T4 검증", "RTX 3060 Ti 교차 검증"),
    프로그램 수만으로는 설명되지 않습니다. Nsight Compute로는 4 → 1 warp에서 DRAM 바이트는 거의 같고 실행 명령 수가 3.35배 줄어든 것까지 확인했고,
    그것이 시간 차이의 원인인지는 확인하지 못했습니다.
-2. **4096토큰에서 그룹 4개 이상이면 vLLM CUDA 커널과 같은 수준이었습니다(127.0 vs 127.8µs).** 다만 공정한 비교는 아닙니다.
+2. 4096토큰에서 그룹 4개 이상이면 vLLM CUDA 커널과 같은 수준이었습니다(127.0 vs 127.8µs). 다만 공정한 비교는 아닙니다.
    vLLM 커널은 eps 처리, `[-128, 127]` 클램프, column-major scale 같은 기능을 더 갖고 있고, 우리 커널은 이걸 뺐습니다.
    이미지 측정에서는 그룹 8개가 vLLM보다 1.11배 빨랐는데(140.7 vs 155.7µs), venv 재측정에서는 그 차이가 없어졌습니다.
-3. **16토큰처럼 작은 입력에서는 Triton 버전과 vLLM 모두 4~5µs라 순위에 의미가 없습니다.** 디코드처럼 토큰이 적을 때는 커널 하나를 빠르게 하는 것보다
+3. 16토큰처럼 작은 입력에서는 Triton 버전과 vLLM 모두 4~5µs라 순위에 의미가 없습니다. 디코드처럼 토큰이 적을 때는 커널 하나를 빠르게 하는 것보다
    커널 수를 줄이는 것(PyTorch 8개 → 1개, 31.5 → 5.2µs)이 효과가 컸습니다.
-4. **그룹 4·8·16개는 세 크기 모두에서 0.2µs 안쪽으로 비슷했습니다.** 이미지 측정에서는 크기마다 가장 빠른 그룹 수가 달라 "최적값이 크기마다 다르다"고 적었지만,
+4. 그룹 4·8·16개는 세 크기 모두에서 0.2µs 안쪽으로 비슷했습니다. 이미지 측정에서는 크기마다 가장 빠른 그룹 수가 달라 "최적값이 크기마다 다르다"고 적었지만,
    venv 재측정에서는 그 차이가 재현되지 않아 그 주장은 뺐습니다.
    참고로 vLLM의 `GetGroupsPerBlock`은 성능을 보고 고르지 않고, 전체 그룹 수가 16·8·4·2로 나누어떨어지는지만 봅니다
    ([per_token_group_quant.cu#L166-L180](https://github.com/vllm-project/vllm/blob/811622c410c2f1baf2fa7056ca19753264b95815/csrc/libtorch_stable/quantization/w8a8/fp8/per_token_group_quant.cu#L166-L180)).
@@ -141,9 +141,9 @@ torch, Triton, vLLM `_C` 확장이 모두 들어 있는 `vllm/vllm-openai:v0.11.
 참고로 이미지 측정 때 1GiB 복사로 잰 대역폭은 349GB/s였고 그룹 8개 버전은 361GB/s가 나왔습니다. venv 재측정에서는 같은 방법의 1GiB 복사가 408.5GB/s, 그룹 8개가 400.4GB/s였습니다.
 복사는 읽기와 쓰기가 1:1이지만 이 연산은 약 2:1이라, 복사 측정치가 이 연산의 상한은 아닙니다.
 
-**정확도** (4096×4096, PyTorch 순정 대비)
+정확도 (4096×4096, PyTorch 순정 대비)
 - 우리 Triton 커널(그룹 수와 무관하게 동일): 1,677만 개 중 21,690개(0.13%)가 1 차이, scale은 완전히 같음. 위 "fp32 나눗셈 정밀도 차이"와 같은 현상입니다.
-- 그룹 N개 버전은 그룹 1개 버전과 **비트 단위로 같습니다**. 마지막 프로그램이 덜 차는 경우까지 `test_group_quant.py`에 테스트를 추가했습니다.
+- 그룹 N개 버전은 그룹 1개 버전과 비트 단위로 같습니다. 마지막 프로그램이 덜 차는 경우까지 `test_group_quant.py`에 테스트를 추가했습니다.
 - vLLM CUDA 커널: 5,950개(0.035%)가 1 차이.
 
 ## Colab T4 검증 ([`verify_claims_colab.ipynb`](verify_claims_colab.ipynb), [`results/bench_t4_colab.json`](results/bench_t4_colab.json))
@@ -163,7 +163,7 @@ Tesla T4, torch 2.11.0+cu130, Triton 3.6.0. fp16 `[4096, 4096]`, `group_size=128
 - PyTorch 참조 구현과의 차이: 1,677만 개 중 21,743개, 모두 1 차이, scale은 동일. 차이가 난 원소는 모두 그룹 최댓값 원소였습니다. 노트북은 앞의 5개만 출력했고, 그 5개는 PyTorch `x/scale`이 ±127.000000, Triton이 ±126인 경우였습니다. 전체를 분류하면 반대 방향도 있습니다(아래 "RTX 3060 Ti 교차 검증").
 - 그룹 8개 버전은 그룹 1개 버전과 비트 단위로 같습니다.
 
-**`group_size` 스윕** (4096×4096, 입력 표준편차 5)
+`group_size` 스윕 (4096×4096, 입력 표준편차 5)
 
 | group_size | 평균 상대 오차 | scale 메모리 | int8 대비 scale 오버헤드 |
 |---|---|---|---|
@@ -182,12 +182,12 @@ Tesla T4, torch 2.11.0+cu130, Triton 3.6.0. fp16 `[4096, 4096]`, `group_size=128
 위 Colab T4 검증과 같은 코드(`verify_claims_colab.ipynb` 2절, 셀 9·10)를 로컬 GPU에서 다시 돌렸습니다.
 
 - 환경: RTX 3060 Ti 8GB, 드라이버 581.80(nvidia-smi 표시 CUDA 13.0), WSL2 Ubuntu 22.04.
-  torch 2.9.0+cu128, Triton 3.5.0, vLLM 0.11.2를 **pip venv**에 설치해 실행했습니다.
+  torch 2.9.0+cu128, Triton 3.5.0, vLLM 0.11.2를 pip venv에 설치해 실행했습니다.
   이전 측정에 쓴 `vllm/vllm-openai:v0.11.2` 이미지(torch 2.9.0+cu129)는 디스크 용량 문제로 이번에는 쓰지 못했습니다.
 - 시간: `triton.testing.do_bench(return_mode='median')` 5회, 표는 그 중앙값입니다. 5회 값은 JSON에 모두 있습니다.
   do_bench 결과가 5회 모두 같은 값으로 나온 칸이 있습니다(예: 266.24µs ×5).
 
-**(a) 4096토큰, fp16 `[4096, 4096]`, `group_size=128`**
+(a) 4096토큰, fp16 `[4096, 4096]`, `group_size=128`
 
 | 구현 | T4 | RTX 3060 Ti (중앙값) | RTX 3060 Ti 5회 | 3060 Ti 실효 대역폭 |
 |---|---|---|---|---|
@@ -201,7 +201,7 @@ Tesla T4, torch 2.11.0+cu130, Triton 3.6.0. fp16 `[4096, 4096]`, `group_size=128
 - 512MiB 복사 대역폭: 414.3GB/s(5회 413.8~414.5). 측정 방법은 노트북과 같습니다(fp16 512MiB, do_bench 중앙값).
 - 16·256토큰(중앙값, µs): PyTorch 31.7 / 128.7, 1 warp 4.2 / 14.3, 2 warp 4.3 / 15.4, 4 warp 5.1 / 20.5, 그룹 8개 4.1 / 11.9.
 
-**기존 `results/bench_rtx_3060_ti.json`과 비교 (같은 GPU, `bench_local.py`와 같은 측정법 = do_bench 기본값 `mean`, 5회 중앙값)**
+기존 `results/bench_rtx_3060_ti.json`과 비교 (같은 GPU, `bench_local.py`와 같은 측정법 = do_bench 기본값 `mean`, 5회 중앙값)
 
 | 4096토큰 | 기존 값 (이미지, cu129) | 이번 값 (venv, cu128) | 이번 5회 |
 |---|---|---|---|
@@ -214,7 +214,7 @@ Tesla T4, torch 2.11.0+cu130, Triton 3.6.0. fp16 `[4096, 4096]`, `group_size=128
 같은 GPU인데 이번 값이 모두 더 빠릅니다. 이전과 달라진 것은 실행 환경(컨테이너 → venv, torch cu129 → cu128), 드라이버 시점입니다. 어느 것이 차이를 만들었는지는 확인하지 못했습니다.
 위 "로컬 GPU 실측" 절의 1GiB 복사 349GB/s와 이번 512MiB 복사 414.3GB/s도 측정법(크기·dtype·반복 방식)이 다르고 차이의 원인은 확인하지 못했습니다.
 
-**(b) PyTorch 참조 구현과의 차이** (seed 0, `randn * 5`)
+(b) PyTorch 참조 구현과의 차이 (seed 0, `randn * 5`)
 
 | 항목 | T4 | RTX 3060 Ti |
 |---|---|---|
@@ -223,7 +223,7 @@ Tesla T4, torch 2.11.0+cu130, Triton 3.6.0. fp16 `[4096, 4096]`, `group_size=128
 | scale 동일 | 예 | 예 |
 | 그룹 8개 == 그룹 1개 (비트 단위) | 예 | 예 |
 
-3060 Ti에서 다른 원소 21,654개를 **전부** 분류했습니다([`mismatch_breakdown.py`](mismatch_breakdown.py), [`results/mismatch_breakdown_rtx_3060_ti.json`](results/mismatch_breakdown_rtx_3060_ti.json)).
+3060 Ti에서 다른 원소 21,654개를 전부 분류했습니다([`mismatch_breakdown.py`](mismatch_breakdown.py), [`results/mismatch_breakdown_rtx_3060_ti.json`](results/mismatch_breakdown_rtx_3060_ti.json)).
 모두 그룹 최댓값 원소였고, 두 가지 경우뿐이었습니다.
 
 | PyTorch `x/scale` | Triton `x/scale` | PyTorch q | Triton q | 개수 |
@@ -235,7 +235,7 @@ T4 절의 "PyTorch는 정확히 ±127.000000, Triton은 ±126"은 첫 번째 경
 Triton 쪽 `x/scale`은 같은 식을 fp32로 저장하는 커널로 따로 계산했고, 이를 `trunc(clamp(...))`한 값이 실제 커널의 q와 전부 일치하는 것을 확인했습니다.
 전체 1,677만 개 중 두 구현의 `x/scale`이 비트 단위로 다른 원소는 5,296,989개, 최대 차이 1.53e-5였습니다.
 
-**(c) `torch.profiler`로 센 커널 수**: PyTorch 순정 8개, Triton 그룹 1개 1개, 그룹 8개 1개. T4와 같습니다.
+(c) `torch.profiler`로 센 커널 수: PyTorch 순정 8개, Triton 그룹 1개 1개, 그룹 8개 1개. T4와 같습니다.
 
 ### 원인 확인 A: 나눗셈이 어떤 명령으로 컴파일됐나
 
@@ -298,13 +298,13 @@ Nsight Compute 2026.3.1. 2023.2.2는 `Profiling is not supported on device 0 as 
 | global load / store 명령 (warp 단위) | 524,288 / 655,360 | 131,072 / 262,144 | 65,536 / 81,920 |
 | SM throughput (peak 대비) | 77.7% | 30.2% | 26.9% |
 
-**4 → 1 warp에서 지표로 설명되는 것**
+4 → 1 warp에서 지표로 설명되는 것
 - DRAM에서 읽고 쓴 바이트는 거의 같습니다(읽기 34.0 → 33.6MB). 옮긴 데이터 양이 줄어서 빨라진 것은 아닙니다.
 - 실행된 명령 수가 3.35배 줄었습니다(warp 단위 49.5M → 14.8M). global load 명령은 4배, store 명령은 2.5배 줄었습니다.
 - SM throughput은 77.7% → 30.2%로 내려가고, DRAM 처리량은 39.0% → 61.6%로 올라갔습니다.
 - achieved occupancy는 88.0% → 28.0%로 떨어졌는데도 빨라졌습니다. occupancy로는 속도 향상을 설명할 수 없습니다.
 
-**지표로 설명되지 않는 것**
+지표로 설명되지 않는 것
 - 4 warp 커널에서 SM throughput 77.7%를 차지한 것이 SM 안의 어느 유닛인지는 재지 않았습니다. 그래서 명령 수 감소가 시간 감소의 직접 원인인지는 이 표만으로 단정할 수 없습니다.
 - 명령 수는 3.35배 줄었는데 시간은 1.6배(ncu) 줄었습니다. 이 차이는 설명하지 못했습니다.
 - 1 warp → 그룹 8개에서는 명령 수(14.8M → 8.1M), occupancy(28.0 → 94.5%), DRAM 처리량(61.6 → 94.8%)이 함께 바뀌어, 어느 쪽이 시간 차이를 만들었는지 나눌 수 없습니다.
@@ -324,11 +324,11 @@ pie showData title GPU 시간 분포 (TinyLlama-1.1B 디코딩 1스텝)
     "PagedAttention KV write" : 0.7
 ```
 
-**핵심 발견**: attention 커널은 GPU 시간의 2.4%뿐이고, 압도적 1위는 GEMV(86.8%)
+핵심 발견: attention 커널은 GPU 시간의 2.4%뿐이고, 압도적 1위는 GEMV(86.8%)
 입니다. 배치=1 GEMV는 가중치 원소 하나당 곱셈-덧셈이 한 번이라 바이트당 연산이 적습니다(계산).
 디코드 한 스텝이 메모리 대역폭을 실제로 몇 % 쓰는지는 [vllm-serving-tuning-practice 실험 5](https://github.com/Thisish3/vllm-serving-tuning-practice#실험-5--디코드-한-스텝은-메모리-대역폭을-얼마나-쓰는가-rtx-3060-ti)에서 쟀습니다.
 weight-only 양자화로 이 시간이 얼마나 줄어드는지는 재지 않았습니다.
-참고로 이 저장소의 group quantization 커널은 가중치가 아니라 **활성값**을 실행 중에
+참고로 이 저장소의 group quantization 커널은 가중치가 아니라 활성값을 실행 중에
 토큰별 그룹으로 양자화하는 커널입니다(vLLM에서는 W8A8 블록 양자화 GEMM 직전에
 입력 `A`에 적용, 예: [fused_moe/utils.py#L192](https://github.com/vllm-project/vllm/blob/811622c410c2f1baf2fa7056ca19753264b95815/vllm/model_executor/layers/fused_moe/utils.py#L192)).
 그래서 가중치 읽기를 줄이지는 않습니다. 이 커널의 그룹 8개 버전은 3060 Ti ncu에서 DRAM 처리량 94.8%였습니다(위 "원인 확인 B"). Colab/Jupyter 환경에서 vLLM을 직접 띄우며
