@@ -21,7 +21,7 @@ flowchart LR
 ## 파일
 - `group_quant_triton.py`: 실제 Triton 커널 (`@triton.jit`)
 - `group_quant_triton_multi.py`: 프로그램 하나가 그룹 여러 개를 처리하는 버전 (원본의 `groups_per_block`)
-- `bench_local.py`: PyTorch 순정 / 우리 Triton / vLLM CUDA 커널 속도·정확도 비교와 `group_size` 스윕
+- `bench_local.py`: PyTorch 순정 / 이 저장소의 Triton / vLLM CUDA 커널 속도·정확도 비교와 `group_size` 스윕
 - `group_quant_op.py`: 위 커널을 `torch.ops.practice.group_quant_int8`로 등록
   (vLLM의 `STABLE_TORCH_LIBRARY` + `STABLE_TORCH_LIBRARY_IMPL` 패턴의 Python판)
 - `test_group_quant.py`: PyTorch 순정 구현과 정확도 비교 + 벤치마크
@@ -68,7 +68,7 @@ Triton 커널과 PyTorch reference를 완전히 같은 수식으로 짜도, 결�
 
 ## 실제 vLLM 프로덕션 커널과 비교 (`group_quant_walkthrough.ipynb`)
 
-우리 Triton 커널(program 1개 = group 1개, 단순화)과 vLLM 프로덕션 CUDA 커널
+이 저장소의 Triton 커널(program 1개 = group 1개, 단순화)과 vLLM 프로덕션 CUDA 커널
 (`per_token_group_quant_int8`: block 1개가 여러 group을 shared memory 캐싱 +
 워프 셔플 리덕션으로 처리)을 `torch.ops.*`로 직접 호출해 3-way 벤치마크했습니다.
 
@@ -111,7 +111,7 @@ torch, Triton, vLLM `_C` 확장이 모두 들어 있는 `vllm/vllm-openai:v0.11.
 
 venv 재측정 (2026-11-04): 같은 GPU, vLLM 0.11.2가 설치된 WSL2 venv(torch 2.9.0+cu128, Triton 3.5.0).
 `bench_local.py`를 수정 없이 새 프로세스로 5번 실행한 값의 중앙값입니다([`results/bench_rtx_3060_ti_venv.json`](results/bench_rtx_3060_ti_venv.json), 실행 드라이버 [`bench_venv.py`](bench_venv.py)).
-이력서와 블로그는 이 값을 씁니다. 위 표(이미지, cu129)와 차이가 나는 원인은 확인하지 못했습니다.
+블로그 글과 요약은 이 값을 씁니다. 위 표(이미지, cu129)와 차이가 나는 원인은 확인하지 못했습니다.
 
 | 구현 | 16토큰 | 256토큰 | 4096토큰 | 4096토큰 실효 대역폭 |
 |---|---|---|---|---|
